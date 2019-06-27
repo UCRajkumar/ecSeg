@@ -38,4 +38,6 @@ Note, support for different dimensions coming soon.
 1. Coordinates folder will be created which will contain a coordinate file for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
 2.  Labels folder will contain the RGB version of the post-processed segmentation. It will also contain raw values saved as a `.npy` file.
 
+## Run fish_interact
+
 

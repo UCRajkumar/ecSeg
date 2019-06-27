@@ -102,7 +102,7 @@ def predict(model, path, img_name):
     with open(coord_path, 'w') as f:
         for prop in RP:
             (x, y) = prop.centroid
-            f.write('{} {}\n'.format(x, y))
+            f.write('{}, {}\n'.format(x, y))
     outpath = path+'labels/'+img_name
     np.save(outpath, img)
     plt.imsave(outpath, img)
