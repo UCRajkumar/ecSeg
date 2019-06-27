@@ -1,0 +1,10 @@
+Keras==2.2.4
+numpy==1.16.2
+tensorflow==1.13.1
+opencv-python==4.1.0.25
+scikit-image==0.15.0
+seaborn==0.9.0
+Pillow==5.4.1
+pandas==0.24.2
+matplotlib==3.0.3
+os

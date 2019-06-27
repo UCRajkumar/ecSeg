@@ -12,31 +12,9 @@ import cv2
 from skimage.morphology import diamond, opening, binary_dilation, binary_erosion, remove_small_objects
 from matplotlib import pyplot as plt
 from skimage.filters import threshold_minimum
-import pydensecrf.densecrf as dcrf
-from pydensecrf.utils import unary_from_labels, create_pairwise_bilateral
 from keras.models import Model, load_model
 
 def inference(img):
-    def crf(original_image, mask_img, gt_prob, compat):
-        # Converting annotated image to RGB if it is Gray scale
-        annotated_label = mask_img
-        colors, labels = np.unique(annotated_label, return_inverse=True)
-        n_labels = 4
-        #Setting up the CRF model
-        original_image = original_image[:1024, :1280, :]
-        d = dcrf.DenseCRF2D(original_image.shape[1], original_image.shape[0], n_labels)
-        # get unary potentials (neg log probability)
-        U = unary_from_labels(labels, n_labels, gt_prob=gt_prob, zero_unsure=False)
-        d.setUnaryEnergy(U)
-        # This adds the color-independent term, features are the locations only.
-        d.addPairwiseGaussian(sxy=(3, 3), compat=compat, kernel=dcrf.DIAG_KERNEL,
-                          normalization=dcrf.NORMALIZE_SYMMETRIC)
-        #Run Inference for 10 steps 
-        Q = d.inference(10)
-        # Find out the most probable class for each pixel.
-        MAP = np.argmax(Q, axis=0)
-        return MAP.reshape((original_image.shape[0],original_image.shape[1]))
-
     #if ecDNA is touching chromosome/nuclei, mark that whole
     #component as that class
     def merge_comp(img, class_id):  
@@ -77,11 +55,8 @@ def inference(img):
     img = fill_holes(fill_holes(fill_holes(img, 1), 2), 3) #fill holes
     img = size_thresh(img)
     img[binary_dilation(img == 3, diamond(1)) ^ binary_erosion(img == 3, diamond(1))] = 0
-    #img = remove_small_objects(merge_comp(merge_comp(img, 1), 2), min_size = 15)
     img = merge_comp(merge_comp(img, 1), 2)
     img[binary_dilation(img ==3, diamond(1))] = 3
-    #img = crf(imread('./SNU16/1.tif'), img, 0.85, 10)
-    #img[temp] = 3
     return img
 
 def predict(model, path, img_name):
