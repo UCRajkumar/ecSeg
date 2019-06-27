@@ -6,7 +6,7 @@ ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 Utkrisht Rajkumar, Kristen Turner, Jens Luebeck, Viraj Deshpande, Manmohan Chandraker, Paul Mischel, and Vineet Bafna
 ```
 
-# Installation
+## Installation
 This platform was built using Python 3.6.7. 
 
 To download project dependencies, execute: 
@@ -15,11 +15,13 @@ To download project dependencies, execute:
 pip install requirements.txt
 ```
 
+## Dataset
 Training and test dataset can be downloaded from:
 ```
 https://drive.google.com/open?id=10owNEZA1vrbNcunPfve1rHlwPalNnXmB
 ```
 
+## Run ecSeg
 To produce segmentations, run ecSeg.py:
 ```
 python ecSeg.py -i input_path
