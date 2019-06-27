@@ -15,3 +15,7 @@ To download project dependencies, execute:
 pip install requirements.txt
 ```
 
+Download dataset from:
+```
+https://drive.google.com/open?id=10owNEZA1vrbNcunPfve1rHlwPalNnXmB
+```

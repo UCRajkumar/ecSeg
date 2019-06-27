@@ -12,7 +12,7 @@ import cv2
 from skimage.morphology import diamond, opening, binary_dilation, binary_erosion, remove_small_objects
 from matplotlib import pyplot as plt
 from skimage.filters import threshold_minimum
-from keras.models import Model, load_model
+from keras.models import Model
 
 def inference(img):
     #if ecDNA is touching chromosome/nuclei, mark that whole
@@ -60,7 +60,6 @@ def inference(img):
     return img
 
 def predict(model, path, img_name):
-    #onlyfiles = [f for f in listdir('./SNU16/.') if isfile(join('./SNU16/', f))]
     num_classes = 4
     name = path+img_name
     img = imread(name)
@@ -71,7 +70,6 @@ def predict(model, path, img_name):
     shape = img.shape
     vcrop = int(shape[0]/256)
     hcrop = int(shape[1]/256)
-    #image[70:170, 440:540]
     for a in range(0,5):
         y = 1
         for k in range(0,4):
@@ -96,19 +94,16 @@ def predict(model, path, img_name):
             I = pred[index]
             row = np.vstack((row, I))
         stitched_im = np.hstack((stitched_im, row))
-    #stitched_im =np.load('./pred/2.npy')
-    #img = label2rgb(np.argmax(stitched_im[:, 1:, :], axis=2), bg_label=0)
     img = np.argmax(stitched_im[:, 1:, :], axis=2)
     img = inference(img)
-    #numecDNA = measure.label(img==3, return_num = True)
-    #RP = measure.regionprops(numecDNA[0])
-    #coord_path = ('./coordinates/'+ os.path.splitext(img_name)[0]+'.txt')
-    #coord_path = 'changeme.txt'
-    #with open(coord_path, 'w') as f:
-     #   for prop in RP:
-      #      (x, y) = prop.centroid
-       #     f.write('{} {}\n'.format(x, y))
-    np.save('./labels/'+img_name, img)
-    outpath = './pred/'+img_name
-    #plt.imsave(outpath, img)
+    numecDNA = measure.label(img==3, return_num = True)
+    RP = measure.regionprops(numecDNA[0])
+    coord_path = path + 'coordinates/'+ os.path.splitext(img_name)[0]+'.txt'
+    with open(coord_path, 'w') as f:
+        for prop in RP:
+            (x, y) = prop.centroid
+            f.write('{} {}\n'.format(x, y))
+    outpath = path+'labels/'+img_name
+    np.save(outpath, img)
+    plt.imsave(outpath, img)
     return outpath
