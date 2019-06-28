@@ -6,15 +6,12 @@ import sys, getopt
 def main(argv):
     inputfile = './'
     try:
-      opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+      opts, args = getopt.getopt(argv,"i:")
     except getopt.GetoptError:
       print('ecSeg.py -i <input path>')
       sys.exit(2)
     for opt, arg in opts:
-      if opt == '-h':
-         print('ecSeg.py -i <input path>')
-         sys.exit()
-      elif opt in ("-i", "--ifile"):
+      if opt in ("-i"):
          inputfile = arg
 
     #create folders
