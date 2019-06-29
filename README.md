@@ -42,7 +42,7 @@ Note, support for different dimensions coming soon.
 
 The segmented images (`.npy`) will be in dimension `1024x1280`.
 
-To extract individual classes:
+To extract individual classes (`example_seg.npy` can be found in "example results" folder):
 
 ```
 seg_I = np.load('example_seg.npy')
