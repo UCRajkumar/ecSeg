@@ -12,7 +12,7 @@ This platform was built using Python 3.6.7.
 To download project dependencies, execute: 
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Dataset
