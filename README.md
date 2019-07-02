@@ -55,7 +55,7 @@ ecDNA = (seg_I==3)
 ## Run ecSeg_fish
 To analyze fish interaction run ecSef_fish.py:
 ```
-python ecSeg_fish.py -i input_path
+python ecSeg_fish.py -i "input_path"
 ```
 
 ### Input specifications
