@@ -6,6 +6,7 @@ import pandas as pd
 import cv2
 from keras.models import load_model
 from predict import predict
+
 def main(argv):
     inputfile = './'
     FISH_COLOR = 'green'
@@ -38,7 +39,7 @@ def main(argv):
                 sys.exit(2)
         elif opt in ('-c'):
             FISH_COLOR = arg
-            if(FISH_COLOR != 'red' or 'green'):
+            if('red' not in FISH_COLOR and 'green' not in FISH_COLOR):
                 print('-c <color of FISH> Must be \'green\' or \'red\'. Your input was \'', FISH_COLOR,
                     '\'. Exiting...')
                 sys.exit(2)
@@ -49,34 +50,34 @@ def main(argv):
                 sys.exit(2)
         elif opt in ('-p'):
             PRED_BOOL = arg
-            if(PRED_BOOL != 'True' or 'False'):
-                print('-p <predict> Must be \'True\' or \'false\'. Indicates whether to re-segment images. Exiting...')
+            if('True' not in PRED_BOOL and 'False' not in PRED_BOOL):
+                print('-p <predict> Must be \'True\' or \'False\'. Indicates whether to re-segment images. Exiting...')
                 sys.exit(2)
     #create folders
-    if(os.path.exists((inputfile+'coordinates'))):
+    if(os.path.exists((inputfile+'/coordinates'))):
         pass
     else:
-        os.mkdir((inputfile+'coordinates'))
+        os.mkdir((inputfile+'/coordinates'))
 
-    if(os.path.exists((inputfile+'labels'))):
+    if(os.path.exists((inputfile+'/labels'))):
         pass
     else:
-        os.mkdir((inputfile+'labels'))
+        os.mkdir((inputfile+'/labels'))
 
-    if(os.path.exists((inputfile+'dapi'))):
+    if(os.path.exists((inputfile+'/dapi'))):
         pass
     else:
-        os.mkdir((inputfile+'dapi'))
+        os.mkdir((inputfile+'/dapi'))
 
-    if(os.path.exists((inputfile+'red'))):
+    if(os.path.exists((inputfile+'/red'))):
         pass
     else:
-        os.mkdir((inputfile+'red'))
+        os.mkdir((inputfile+'/red'))
 
-    if(os.path.exists((inputfile+'green'))):
+    if(os.path.exists((inputfile+'/green'))):
         pass
     else:
-        os.mkdir((inputfile+'green'))
+        os.mkdir((inputfile+'/green'))
     if(PRED_BOOL=='True'):
         model = load_model('ecDNA_model.h5') #load model
         for f in os.listdir(inputfile): #get all images in path
@@ -96,15 +97,15 @@ def main(argv):
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
             IMG_NAME.append(f)
-            A = np.load((inputfile+'labels/'+f+'.npy'))
-            B = Image.open((inputfile +f))
+            A = np.load((inputfile+'/labels/'+f+'.npy'))
+            B = Image.open((inputfile+'/' +f))
             red, green, blue = B.split()
             channels = B.split()
-            cv2.imwrite((inputfile+'dapi/'+f),cv2.bitwise_not(np.uint8(channels[2])))
-            cv2.imwrite((inputfile+'red/'+f),cv2.bitwise_not(np.uint8(channels[0])))
-            cv2.imwrite((inputfile+'green/'+f),cv2.bitwise_not(np.uint8(channels[1])))
+            cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(channels[2])))
+            cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(channels[0])))
+            cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(channels[1])))
             nuc = ~(A==1)
-            if(FISH_COLOR =='green'):
+            if('green' in FISH_COLOR):
                 fish = (np.array(channels[1]) > THRESHOLD)[:1024,:1280]
             else:
                 fish = (np.array(channels[0]) > THRESHOLD)[:1024,:1280]
@@ -126,8 +127,8 @@ def main(argv):
                 FISH_CHROM_RATIO.append(len(np.where((fish*chrom))[0])/TOT_FISH[-1])
 
             df = pd.DataFrame({'image_name':IMG_NAME, 'ec_pixels':TOT_EC,
-                'chrom_pixels':TOT_CHROM, 'fish_pixels(green)':TOT_FISH, 'ec+fish':FISH_EC, 'chrom+fish':FISH_CHROM,
+                'chrom_pixels':TOT_CHROM, 'fish_pixels({})'.format(FISH_COLOR):TOT_FISH, 'ec+fish':FISH_EC, 'chrom+fish':FISH_CHROM,
                 '(ec+fish)/fish':FISH_EC_ratio, '(chrom+fish)/fish': FISH_CHROM_RATIO})
-            df.to_excel((inputfile + inputfile[1:-1]+ '.xlsx'))
+            df.to_excel((inputfile + '/ec_fish.xlsx'))
 if __name__ == "__main__":
     main(sys.argv[1:])

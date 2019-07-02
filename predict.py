@@ -61,7 +61,7 @@ def inference(img):
 
 def predict(model, path, img_name):
     num_classes = 4
-    name = path+img_name
+    name = path+'/'+img_name
     img = imread(name)
     crops = []
     y = 1
@@ -98,12 +98,12 @@ def predict(model, path, img_name):
     img = inference(img)
     numecDNA = measure.label(img==3, return_num = True)
     RP = measure.regionprops(numecDNA[0])
-    coord_path = path + 'coordinates/'+ os.path.splitext(img_name)[0]+'.txt'
+    coord_path = path + '/coordinates/'+ os.path.splitext(img_name)[0]+'.txt'
     with open(coord_path, 'w') as f:
         for prop in RP:
             (x, y) = prop.centroid
             f.write('{}, {}\n'.format(x, y))
-    outpath = path+'labels/'+img_name
+    outpath = path+'/labels/'+img_name
     np.save(outpath, img)
     plt.imsave(outpath, img)
     return outpath
