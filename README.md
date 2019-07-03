@@ -39,7 +39,7 @@ python ecSeg.py -i "input_path"
 ### Input specifications
 1. input_path (must be enclosed by double quotes ""). For example: 
 
-...`python ecSeg.py -i "C:\Users\Utkrisht\path\to\ec_images"`
+  `python ecSeg.py -i "C:\Users\Utkrisht\path\to\ec_images"`
 
 
 2. Software will only read the `.tif` images
