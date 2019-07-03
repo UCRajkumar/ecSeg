@@ -37,7 +37,8 @@ python ecSeg.py -i "input_path"
 ```
 
 ### Input specifications
-1. input_path (must be enclosed by double quotes ""). For example: `python ecSeg.py -i "C:\Users\Utkrisht\path\to\ec_images"`
+1. input_path (must be enclosed by double quotes "").
+For example: `python ecSeg.py -i "C:\Users\Utkrisht\path\to\ec_images"`
 2. Software will only read the `.tif` images
 3. Input images must be `1040x1392x3` (RGB images)
 
@@ -72,7 +73,7 @@ python ecSeg_fish.py -i "input_path"
 Arguments | Description 
 ---| ---|
 `-h` | Displays argument options
-`-i` | Path to folder containing images. Must be wrapped in double quotes. See above.
+`-i` | Path to folder containing images. Must be wrapped in double quotes. See example above on how to run ecSeg.py.
 `-c` | Fish color (optional). Must be 'green' or 'red'
 `-t` | Threshold value (optional). Threshold values must be [0, 255]. Indicates sensitivity of FISH interaction. 0 and 255 are the least and highest sensitivity, respectively
 `-p` | Segment boolean (optional). Must be 'True' or 'False'. Indicates whether to re-segment images. Enter 'False' if you have already segmented the images
