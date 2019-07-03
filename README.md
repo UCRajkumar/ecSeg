@@ -22,7 +22,7 @@ https://drive.google.com/open?id=10owNEZA1vrbNcunPfve1rHlwPalNnXmB
 ```
 
 Dataset | Description
-...|...
+---|---|
 train_im| RGB patches used to train neural network 
 train_mask| mask for train_im patches 
 test_im|  RGB patches used to evaluate neural network 
