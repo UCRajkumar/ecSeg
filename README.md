@@ -21,13 +21,13 @@ Training and test dataset can be downloaded from:
 https://drive.google.com/open?id=10owNEZA1vrbNcunPfve1rHlwPalNnXmB
 ```
 
-|Dataset | Description|
-|...|...|
-|train_im| RGB patches used to train neural network |
-|train_mask| mask for train_im patches |
-|test_im|  RGB patches used to evaluate neural network |
-|test_mask| mask for test_im patches |
-|ec_images| fullsize images to test ecSeg |
+Dataset | Description
+...|...
+train_im| RGB patches used to train neural network 
+train_mask| mask for train_im patches 
+test_im|  RGB patches used to evaluate neural network 
+test_mask| mask for test_im patches 
+ec_images| fullsize images to test ecSeg 
 
 
 ## Run ecSeg
