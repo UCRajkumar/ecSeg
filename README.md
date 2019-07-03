@@ -21,6 +21,15 @@ Training and test dataset can be downloaded from:
 https://drive.google.com/open?id=10owNEZA1vrbNcunPfve1rHlwPalNnXmB
 ```
 
+|Dataset | Description|
+|...|...|
+|train_im| RGB patches used to train neural network |
+|train_mask| mask for train_im patches |
+|test_im|  RGB patches used to evaluate neural network |
+|test_mask| mask for test_im patches |
+|ec_images| fullsize images to test ecSeg |
+
+
 ## Run ecSeg
 To produce segmentations, run ecSeg.py:
 ```
@@ -28,7 +37,7 @@ python ecSeg.py -i "input_path"
 ```
 
 ### Input specifications
-1. input_path (must be enclosed by double quotes ""). For example: `python ecSeg.py -i "C:\Users\Utkrisht\images_folder"`
+1. input_path (must be enclosed by double quotes ""). For example: `python ecSeg.py -i "C:\Users\Utkrisht\path\to\ec_images"`
 2. Software will only read the `.tif` images
 3. Input images must be `1040x1392x3` (RGB images)
 
