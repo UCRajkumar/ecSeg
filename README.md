@@ -9,29 +9,28 @@ Utkrisht Rajkumar, Kristen Turner, Jens Luebeck, Viraj Deshpande, Manmohan Chand
 ## Installation
 This platform was built using Python 3.6.7. 
 
-To download project dependencies, execute: 
+To download project dependencies, execute the following commands from a terminal: 
 
 ```
 git clone https://github.com/ucrajkumar/ecSeg
-pip install -r requirements.txt
+cd ecSeg
+pip3 install -r requirements.txt
 ```
 
 ## Run ecSeg
 To produce segmentations, run ecSeg.py:
 ```
-python ecSeg.py -i "input_path"
+python3 ecSeg.py -i "input_path"
 ```
 
 ### Input specifications
-1. input_path (must be enclosed by double quotes ""). For example: 
+1. input_path (must be enclosed by double quotes ""). 
 
-    `python ecSeg.py -i "C:\Users\Utkrisht\path\to\images"`
-
-
+For example: `python3 ecSeg.py -i "C:\Users\Utkrisht\path\to\images"`
 2. Software will only read the `.tif` images
 3. Input images must be `1040x1392x3` (RGB images)
 
-Note, support for different dimensions coming soon.
+Note: The flag, -i, must be provided.
 
 ### Output 
 1. **Coordinates folder** will be created which will contain a coordinate file for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
@@ -41,10 +40,10 @@ Note, support for different dimensions coming soon.
 
 The segmented images (`.npy`) will be in dimension `1024x1280`.
 
-To extract individual classes (`example_seg.npy` can be found in "example results" folder):
+To extract individual classes (`seg.npy` can be found in "example_results" folder):
 
 ```
-seg_I = np.load('example/seg.npy')
+seg_I = np.load('example_results/seg.npy')
 background = (seg_I==0)
 nuclei = (seg_I==1)
 chromosome = (seg_I==2)
@@ -58,7 +57,7 @@ ecDNA = (seg_I==3)
 ## Run ecSeg_fish
 To analyze fish interaction run ecSef_fish.py:
 ```
-python ecSeg_fish.py -i "input_path"
+python3 ecSeg_fish.py -i "input_path"
 ```
 
 ### Input specifications
