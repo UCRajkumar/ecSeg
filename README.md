@@ -50,10 +50,6 @@ chromosome = (seg_I==2)
 ecDNA = (seg_I==3)
 ```
 
-#### Example output
-![Input Image](/example_results/input.png)
-
-
 ## Run ecSeg_fish
 To analyze fish interaction run ecSef_fish.py:
 ```

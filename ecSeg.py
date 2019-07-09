@@ -1,3 +1,7 @@
+#Author: Utkrisht Rajkumar
+#Email: urajkuma@eng.ucsd.edu
+#Loads in trained model and produces segmentation maps of images in folder
+
 import os
 from predict import predict
 from keras.models import Model, load_model
@@ -24,14 +28,13 @@ def main(argv):
       pass
     else:
       os.mkdir((inputfile+'/labels'))
-    print(inputfile)
-    
+    print("Loading in trained model...")
     model = load_model('ecDNA_model.h5') #load model
     for f in os.listdir(inputfile): #get all images in path
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
           print('Segmenting',f)
           predict(model, inputfile, (f))
-
+    print("Successfully exited...")
 if __name__ == "__main__":
    main(sys.argv[1:])
