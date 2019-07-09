@@ -66,7 +66,7 @@ ecDNA = (seg_I==3)
 ```
 
 #### Example output
-<img src="example/input.png">
+<img src="example/input.png" width="100">
 
 
 ## Run ecSeg_fish
