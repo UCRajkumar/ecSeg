@@ -66,9 +66,9 @@ ecDNA = (seg_I==3)
 ```
 
 #### Example output
-![Input Image](example/input.tif)
-![Blue scale extracted](example/dapi.tif)
-![Output segmentation](example/seg.tif)
+![Input Image](example/input.tif?raw=true)
+![Blue scale extracted](example/dapi.tif?raw=true)
+![Output segmentation](example/seg.tif?raw=true)
 
 ## Run ecSeg_fish
 To analyze fish interaction run ecSef_fish.py:
