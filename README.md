@@ -12,6 +12,7 @@ This platform was built using Python 3.6.7.
 To download project dependencies, execute: 
 
 ```
+git clone https://github.com/ucrajkumar/ecSeg
 pip install -r requirements.txt
 ```
 
