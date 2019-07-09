@@ -45,12 +45,17 @@ The segmented images (`.npy`) will be in dimension `1024x1280`.
 To extract individual classes (`example_seg.npy` can be found in "example results" folder):
 
 ```
-seg_I = np.load('example_seg.npy')
+seg_I = np.load('example/seg.npy')
 background = (seg_I==0)
 nuclei = (seg_I==1)
 chromosome = (seg_I==2)
 ecDNA = (seg_I==3)
 ```
+
+#### Example output
+![Input Image](example/input.tif)
+![Blue scale extracted](example/dapi.tif)
+![Output segmentation](example/seg.tif)
 
 ## Run ecSeg_fish
 To analyze fish interaction run ecSef_fish.py:
