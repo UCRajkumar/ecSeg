@@ -15,16 +15,17 @@ def main(argv):
          inputfile = arg
 
     #create folders
-    if(os.path.exists((inputfile+'coordinates'))):
+    if(os.path.exists((inputfile+'\coordinates'))):
       pass
     else:
-      os.mkdir((inputfile+'coordinates'))
+      os.mkdir((inputfile+'\coordinates'))
 
-    if(os.path.exists((inputfile+'labels'))):
+    if(os.path.exists((inputfile+'\labels'))):
       pass
     else:
-      os.mkdir((inputfile+'labels'))
-
+      os.mkdir((inputfile+'\labels'))
+    print(inputfile)
+    
     model = load_model('ecDNA_model.h5') #load model
     for f in os.listdir(inputfile): #get all images in path
         ext = os.path.splitext(f)[1]

@@ -9,4 +9,3 @@ pandas==0.24.2
 matplotlib==3.0.3
 tqdm==4.31.1
 scipy==1.2.1
-os
