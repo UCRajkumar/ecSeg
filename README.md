@@ -26,7 +26,7 @@ python3 ecSeg.py -i "input_path"
 ### Input specifications
 1. input_path (must be enclosed by double quotes ""). 
 
-For example: `python3 ecSeg.py -i "C:\Users\Utkrisht\path\to\images"`
+For example: `python3 ecSeg.py -i "C:/Users/Utkrisht/path/to/images"`
 2. Software will only read the `.tif` images
 3. Input images must be `1040x1392x3` (RGB images)
 
