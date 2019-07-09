@@ -11,6 +11,7 @@ import pandas as pd
 import cv2
 from keras.models import load_model
 from predict import predict
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 def main(argv):
     inputfile = './'

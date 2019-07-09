@@ -18,6 +18,8 @@ from matplotlib import pyplot as plt
 from skimage.filters import threshold_minimum
 from keras.models import Model
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
 #post-processing
 def inference(img):
     #if ecDNA is touching chromosome/nuclei, mark that whole

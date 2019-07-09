@@ -6,6 +6,7 @@ import os
 from predict import predict
 from keras.models import Model, load_model
 import sys, getopt
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 def main(argv):
     inputfile = './'
