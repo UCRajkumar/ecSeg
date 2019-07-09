@@ -1,3 +1,7 @@
+#Author: Utkrisht Rajkumar
+#Email: urajkuma@eng.ucsd.edu
+#Produces segmentation and post-processes the image
+
 from os import listdir
 import os
 from os.path import isfile, join
@@ -14,6 +18,7 @@ from matplotlib import pyplot as plt
 from skimage.filters import threshold_minimum
 from keras.models import Model
 
+#post-processing
 def inference(img):
     #if ecDNA is touching chromosome/nuclei, mark that whole
     #component as that class
@@ -59,6 +64,7 @@ def inference(img):
     img[binary_dilation(img ==3, diamond(1))] = 3
     return img
 
+#Crops large size image, predicts on patches, and restitches image
 def predict(model, path, img_name):
     num_classes = 4
     name = path+'/'+img_name
@@ -96,7 +102,7 @@ def predict(model, path, img_name):
         stitched_im = np.hstack((stitched_im, row))
     img = np.argmax(stitched_im[:, 1:, :], axis=2)
     img = inference(img)
-    numecDNA = measure.label(img==3, return_num = True)
+    numecDNA = measure.label(img==3, return_num = True) #compute number of ecDNA
     RP = measure.regionprops(numecDNA[0])
     coord_path = path + '/coordinates/'+ os.path.splitext(img_name)[0]+'.txt'
     with open(coord_path, 'w') as f:
