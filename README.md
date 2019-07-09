@@ -66,7 +66,7 @@ ecDNA = (seg_I==3)
 ```
 
 #### Example output
-![Input Image](example/input.png?raw=true)
+![Input Image](example/input.png)
 ![Blue scale extracted](example/dapi.png?raw=true)
 ![Output segmentation](example/seg.png?raw=true)
 
