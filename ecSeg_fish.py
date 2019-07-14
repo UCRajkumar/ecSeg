@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #Author: Utkrisht Rajkumar
 #Email: urajkuma@eng.ucsd.edu
 #Loads in trained model and produces segmentation maps of images in folder
@@ -11,6 +12,9 @@ import pandas as pd
 import cv2
 from keras.models import load_model
 from predict import predict
+
+if sys.version_info[0] < 3:
+    raise Exception("Must run with Python version 3 or higher")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 def main(argv):

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #Author: Utkrisht Rajkumar
 #Email: urajkuma@eng.ucsd.edu
 #Produces segmentation and post-processes the image
@@ -18,6 +19,9 @@ from matplotlib import pyplot as plt
 from skimage.filters import threshold_minimum
 from keras.models import Model
 
+
+if sys.version_info[0] < 3:
+    raise Exception("Must run with Python version 3 or higher")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 #post-processing
