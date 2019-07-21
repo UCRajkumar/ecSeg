@@ -7,7 +7,7 @@ Utkrisht Rajkumar, Kristen Turner, Jens Luebeck, Viraj Deshpande, Manmohan Chand
 ```
 
 ## Installation
-This platform was built using Python 3.6.7. 
+This platform was built using Python 3.6.7 and requires a modern processor with support for AVX instructions.
 
 To download project dependencies, execute the following commands from a terminal: 
 

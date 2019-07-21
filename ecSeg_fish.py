@@ -6,6 +6,7 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
+from keras import backend as K
 from PIL import Image
 import os, sys, getopt
 import pandas as pd
@@ -142,5 +143,6 @@ def main(argv):
                 '(ec+fish)/fish':FISH_EC_ratio, '(chrom+fish)/fish': FISH_CHROM_RATIO})
             df.to_csv((inputfile + '/ec_fish.csv'))
     print("FISH analysis complete, successfully exited...")
+    K.clear_session()
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -7,6 +7,7 @@ import os
 from predict import predict
 from keras.models import Model, load_model
 import sys, getopt
+from keras import backend as K
 
 if sys.version_info[0] < 3:
     raise Exception("Must run with Python version 3 or higher")
@@ -41,5 +42,6 @@ def main(argv):
           print('Segmenting',f)
           predict(model, inputfile, (f))
     print("Successfully exited...")
+    K.clear_session()
 if __name__ == "__main__":
    main(sys.argv[1:])
