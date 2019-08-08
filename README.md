@@ -69,7 +69,7 @@ Arguments | Description
 ## Training/test Dataset
 Training and test dataset can be downloaded from:
 ```
-https://drive.google.com/open?id=10owNEZA1vrbNcunPfve1rHlwPalNnXmB
+https://zenodo.org/deposit/3362771
 ```
 
 Dataset | Description
@@ -78,3 +78,4 @@ train_im| RGB patches used to train neural network
 train_mask| mask for train_im patches 
 test_im|  RGB patches used to evaluate neural network 
 test_mask| mask for test_im patches 
+full images | full sized images used for evaluation
