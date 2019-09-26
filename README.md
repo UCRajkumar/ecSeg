@@ -69,7 +69,7 @@ Arguments | Description
 ## Training/test Dataset
 Training and test dataset can be downloaded from:
 ```
-https://zenodo.org/deposit/3362771
+https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29b09f759795
 ```
 
 Dataset | Description
