@@ -9,7 +9,18 @@ Utkrisht Rajkumar, Kristen Turner, Jens Luebeck, Viraj Deshpande, Manmohan Chand
 ## Installation
 This platform requires a modern processor with support for AVX instructions and python 3.5. 
 
-To download project dependencies, execute the following commands from a terminal: 
+We highly recommend installing ecseg through a conda environemnt.
+```
+git clone https://github.com/ucrajkumar/ecSeg
+cd ecSeg
+conda create -n ecseg python=3.5
+source activate ecseg
+conda install Pillow tqdm matplotlib scikit-image
+conda install -c menpo opencv 
+conda install keras
+```
+
+If not using conda, execute the following commands from a terminal: 
 
 ```
 git clone https://github.com/ucrajkumar/ecSeg
