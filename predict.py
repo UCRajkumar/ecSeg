@@ -75,6 +75,13 @@ def predict(model, path, img_name):
     num_classes = 4
     name = path+'/'+img_name
     img = imread(name)
+    if(img.dtype == 'uint16'):
+        img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
+    if(len(img.shape) == 2):
+        img = np.expand_dims(img, axis=-1)
+    else:
+        img = img[:,:,2]
+        img = np.expand_dims(img, axis=-1)
     crops = []
     y = 1
     x = 1
