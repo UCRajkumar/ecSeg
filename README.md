@@ -21,14 +21,6 @@ pip install keras=2.2.5
 pip install matplotlib=2.2.4
 ```
 
-If not using conda, execute the following commands from a terminal: 
-
-```
-git clone https://github.com/ucrajkumar/ecSeg
-cd ecSeg
-pip3 install -r requirements.txt
-```
-
 ## Run ecSeg
 To produce segmentations, run ecSeg.py:
 ```
