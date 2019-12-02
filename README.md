@@ -1,10 +1,9 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-Reference implementation of methods outlined in ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.
-```
-ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
-Utkrisht Rajkumar, Kristen Turner, Jens Luebeck, Viraj Deshpande, Manmohan Chandraker, Paul Mischel, and Vineet Bafna
-```
+Reference implementation of methods outlined in: 
+
+Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
+
 
 ## Installation
 This platform requires a modern processor with support for AVX instructions and python 3.5 or greater. 
