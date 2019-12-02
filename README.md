@@ -8,7 +8,7 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 ## Installation
 This platform requires a modern processor with support for AVX instructions and python 3.5 or greater. 
 
-We highly recommend installing ecseg through a conda environemnt.
+We highly recommend installing ecSeg through a conda environemnt.
 ```
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
