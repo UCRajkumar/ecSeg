@@ -4,7 +4,7 @@ Reference implementation of methods outlined in:
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
-The latest version of ecSeg can be found [here](https://github.com/UCRajkumar/ecSeg/tree/dev).
+The latest development of ecSeg can be found [here](https://github.com/UCRajkumar/ecSeg/tree/dev).
 
 ## Installation
 This platform requires a modern processor with support for AVX instructions and python 3.5 or greater. 
