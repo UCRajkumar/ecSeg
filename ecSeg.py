@@ -35,7 +35,7 @@ def main(argv):
     else:
       os.mkdir((inputfile+'/labels'))
     print("Loading in trained model...")
-    model = load_model('ecDNA_model.h5') #load model
+    model = load_model('ecDNA_ResUnet.h5') #load model
     for f in os.listdir(inputfile): #get all images in path
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
