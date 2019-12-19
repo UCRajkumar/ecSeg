@@ -4,6 +4,8 @@ Reference implementation of methods outlined in:
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
+Segments and quantifies ecDNA in metaphase spreads. Performs integrated analysis of DAPI and FISH probes on ecDNA and homogeneously stained regions to provide oncogene amplification location. 
+
 The latest development of ecSeg can be found [here](https://github.com/UCRajkumar/ecSeg/tree/dev).
 
 ## Installation
