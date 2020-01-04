@@ -1,6 +1,6 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-This is branch is the latest development of ecSeg. Updates: Replacement of convolutional blocks with residual blocks and the implementation of [mutli-scale context aggregation by dilated convolutions](https://arxiv.org/abs/1511.07122) by Fu et al.
+This branch is the latest development of ecSeg. Updates: Replacement of convolutional blocks with residual blocks and the incorporation of [mutli-scale context aggregation by dilated convolutions](https://arxiv.org/abs/1511.07122).
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
