@@ -1,7 +1,6 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-This is branch is the latest development of ecSeg. The original implementation can be found [here](https://github.com/UCRajkumar/ecSeg/). 
-Updates: Replacement of convolutional blocks with residual blocks and the implementation of [mutli-scale context aggregation by dilated convolutions](https://arxiv.org/abs/1511.07122) by Fu et al.
+This is branch is the latest development of ecSeg. Updates: Replacement of convolutional blocks with residual blocks and the implementation of [mutli-scale context aggregation by dilated convolutions](https://arxiv.org/abs/1511.07122) by Fu et al.
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
@@ -12,12 +11,8 @@ We highly recommend installing ecSeg through a conda environemnt.
 ```
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
-conda create -n ecseg python=3.7
-source activate ecseg
-conda install Pillow tqdm scikit-image
-conda install -c menpo opencv 
-pip install keras=2.2.5
-pip install matplotlib=2.2.4
+conda create -n ecseg python=3.7 opencv Pillow tqdm scikit-image keras
+conda activate ecseg
 ```
 
 ## Run ecSeg
