@@ -13,6 +13,7 @@ from skimage.io import imread, imshow, imread_collection, concatenate_images
 from scipy.ndimage import label, generate_binary_structure, binary_fill_holes
 from skimage.color import label2rgb, rgb2gray, gray2rgb
 from PIL import Image
+import scipy.misc
 import cv2
 from skimage.morphology import diamond, opening, binary_dilation, binary_erosion, remove_small_objects
 from matplotlib import pyplot as plt
@@ -122,7 +123,9 @@ def predict(model, path, img_name):
         for prop in RP:
             (x, y) = prop.centroid
             f.write('{}, {}\n'.format(x, y))
-    outpath = path+'/labels/'+img_name
-    np.save(outpath, img)
-    plt.imsave(outpath, img)
-    return outpath
+    data_path = path+'/labels/'+ os.path.splitext(img_name)[0]
+    np.save(data_path, img)
+
+    im_path = path+'/labels/'+ os.path.splitext(img_name)[0] + '.tif'
+    plt.imsave(im_path, img.astype('uint8'))
+    return im_path
