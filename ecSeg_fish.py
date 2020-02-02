@@ -20,11 +20,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def main(argv):
     inputfile = './'
+    model_name = 'ecDNA_ResUnet.h5'
     FISH_COLOR = 'green'
     THRESHOLD = 120
     PRED_BOOL = 'True'
     try:
-        opts, args = getopt.getopt(argv,"h:i:c:t:p:")
+        opts, args = getopt.getopt(argv,"h:i:c:t:p:m:")
     except getopt.GetoptError:
         print('ecSeg.py arguments: \n',
             '-h Displays argument options'  
@@ -64,6 +65,9 @@ def main(argv):
             if('True' not in PRED_BOOL and 'False' not in PRED_BOOL):
                 print('-p <predict> Must be \'True\' or \'False\'. Indicates whether to re-segment images. Exiting...')
                 sys.exit(2)
+        elif opt in ('-m'):
+            model_name = arg
+
     #create folders
     if(os.path.exists((inputfile+'/coordinates'))):
         pass
@@ -89,9 +93,10 @@ def main(argv):
         pass
     else:
         os.mkdir((inputfile+'/green'))
+
     if(PRED_BOOL=='True'):
         print("Loading in trained model...")
-        model = load_model('ecDNA_ResUnet.h5') #load model
+        model = load_model(model_name) #load model
         for f in os.listdir(inputfile): #get all images in path
             ext = os.path.splitext(f)[1]
             if ext.lower() == '.tif':
@@ -108,6 +113,7 @@ def main(argv):
     for f in os.listdir(inputfile):
         name = os.path.splitext(f)[0]
         ext = os.path.splitext(f)[1]
+        print("Processing ", name)
         if ext.lower() == '.tif':
             IMG_NAME.append(f)
             A = np.load((inputfile+'/labels/'+name+'.npy'))
