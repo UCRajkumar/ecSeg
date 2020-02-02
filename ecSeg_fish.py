@@ -106,10 +106,11 @@ def main(argv):
     FISH_EC = []
     FISH_CHROM = []
     for f in os.listdir(inputfile):
+        name = os.path.splitext(f)[0]
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
             IMG_NAME.append(f)
-            A = np.load((inputfile+'/labels/'+f+'.npy'))
+            A = np.load((inputfile+'/labels/'+name+'.npy'))
             B = Image.open((inputfile+'/' +f))
             red, green, blue = B.split()
             channels = B.split()
