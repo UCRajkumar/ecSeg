@@ -15,14 +15,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def main(argv):
     inputfile = './'
+    model_name = 'ecDNA_ResUnet.h5'
+    
     try:
-      opts, args = getopt.getopt(argv,"i:")
+      opts, args = getopt.getopt(argv,"i:m:")
     except getopt.GetoptError:
-      print('ecSeg.py -i <input path>')
+      print('ecSeg.py -i <input path> -m <model name>')
       sys.exit(2)
     for opt, arg in opts:
       if opt in ("-i"):
          inputfile = arg
+      if opt in ("-m"):
+         model_name = arg
 
     #create folders
     if(os.path.exists((inputfile+'/coordinates'))):
@@ -34,8 +38,9 @@ def main(argv):
       pass
     else:
       os.mkdir((inputfile+'/labels'))
+    
     print("Loading in trained model...")
-    model = load_model('ecDNA_ResUnet.h5') #load model
+    model = load_model(model_name) #load model
     for f in os.listdir(inputfile): #get all images in path
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
