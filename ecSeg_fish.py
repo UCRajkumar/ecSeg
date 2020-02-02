@@ -91,7 +91,7 @@ def main(argv):
         os.mkdir((inputfile+'/green'))
     if(PRED_BOOL=='True'):
         print("Loading in trained model...")
-        model = load_model('ecDNA_model.h5') #load model
+        model = load_model('ecDNA_ResUnet.h5') #load model
         for f in os.listdir(inputfile): #get all images in path
             ext = os.path.splitext(f)[1]
             if ext.lower() == '.tif':
