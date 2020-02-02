@@ -22,11 +22,10 @@ python3 ecSeg.py -i "input_path"
 ```
 
 ### Input specifications
-1. input_path (must be enclosed by double quotes ""). 
-
-For example: `python3 ecSeg.py -i "C:/Users/Utkrisht/path/to/images"`
+1. input_path must be enclosed by double quotes "". For example: `python3 ecSeg.py -i "C:/Users/Utkrisht/path/to/images"`
 2. Software will only read the `.tif` images
-3. Input images must be `1040x1392x3` (RGB images)
+3. Input images will be resized to `1040x1392`
+4. Optionally, you can provide a model name using "-m"
 
 Note: The flag, -i, must be provided.
 
@@ -36,9 +35,9 @@ Note: The flag, -i, must be provided.
 
 #### Segmentation details
 
-The segmented images (`.npy`) will be in dimension `1024x1280`.
+The segmented images will be in dimension `1024x1280`.
 
-To extract individual classes (`seg.npy` can be found in "example_results" folder):
+To extract individual classes:
 
 ```
 seg_I = np.load('example_results/seg.npy')
