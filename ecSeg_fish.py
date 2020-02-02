@@ -113,11 +113,15 @@ def main(argv):
     for f in os.listdir(inputfile):
         name = os.path.splitext(f)[0]
         ext = os.path.splitext(f)[1]
-        print("Processing ", name)
         if ext.lower() == '.tif':
+            print("Processing ", name)
             IMG_NAME.append(f)
-            A = np.load((inputfile+'/labels/'+name+'.npy'))
             B = Image.open((inputfile+'/' +f))
+            if('I' in B.getbands()):
+                print(name, " isn't an RGB image and cannot be processed for FISH analysis")
+                continue
+
+            A = np.load((inputfile+'/labels/'+name+'.npy'))
             red, green, blue = B.split()
             channels = B.split()
             cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(channels[2])))
