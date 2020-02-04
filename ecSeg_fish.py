@@ -156,7 +156,7 @@ def main(argv):
 
             df = pd.DataFrame({'image_name':IMG_NAME, 'ec_pixels':TOT_EC,
                 'chrom_pixels':TOT_CHROM, 'fish_pixels({})'.format(FISH_COLOR):TOT_FISH, 'ec+fish pixels':FISH_EC, 'chrom+fish pxiels':FISH_CHROM,
-                '(ec+fish pixels)/fish':FISH_EC_ratio, '(chrom+fish pixels)/fish': FISH_CHROM_RATIO, '(num ecDNA + fish':numecDNA[1]})
+                '(ec+fish pixels)/fish':FISH_EC_ratio, '(chrom+fish pixels)/fish': FISH_CHROM_RATIO, 'number of ecDNA + fish':numecDNA[1]})
             df.to_csv((inputfile + '/ec_fish.csv'))
 
     print("FISH analysis complete, successfully exited...")
