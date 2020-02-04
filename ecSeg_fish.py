@@ -13,6 +13,7 @@ import pandas as pd
 import cv2
 from keras.models import load_model
 from predict import predict
+from skimage import measure
 
 if sys.version_info[0] < 3:
     raise Exception("Must run with Python version 3 or higher")
@@ -116,43 +117,48 @@ def main(argv):
         if ext.lower() == '.tif':
             print("Processing ", name)
             IMG_NAME.append(f)
-            B = Image.open((inputfile+'/' +f))
-            if('I' in B.getbands()):
+            I = Image.open((inputfile+'/' +f))
+            if('I' in I.getbands()):
                 print(name, " isn't an RGB image and cannot be processed for FISH analysis")
                 continue
 
-            A = np.load((inputfile+'/labels/'+name+'.npy'))
-            red, green, blue = B.split()
-            channels = B.split()
+            labels = np.load((inputfile+'/labels/'+name+'.npy'))
+            channels = I.split()
             cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(channels[2])))
             cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(channels[0])))
             cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(channels[1])))
-            nuc = ~(A==1)
+            nuc = ~(labels==1)
             if('green' in FISH_COLOR):
                 fish = (np.array(channels[1]) > THRESHOLD)[:1024,:1280]
             else:
                 fish = (np.array(channels[0]) > THRESHOLD)[:1024,:1280]
             fish = fish * nuc
-            ec = (A==3)
-            chrom = (A==2)
+            ec = (labels==3)
+            chrom = (labels==2)
+            fish_ec = fish*ec
+            fish_chrom = fish*chrom
             TOT_FISH.append(len(np.where(fish)[0]))
             TOT_EC.append(len(np.where(ec)[0]))
             TOT_CHROM.append(len(np.where(chrom)[0]))
-            FISH_EC.append(len(np.where((fish*ec))[0]))
-            FISH_CHROM.append(len(np.where((fish*chrom))[0]))
+            FISH_EC.append(len(np.where((fish_ec))[0]))
+            FISH_CHROM.append(len(np.where((fish_chrom))[0]))
+            
+            numecDNA = measure.label(fish_ec, return_num = True) #compute number of ecDNA
+            
             if(TOT_FISH[-1]==0):
                 FISH_EC_ratio.append(0)
             else:
-                FISH_EC_ratio.append(len(np.where((fish*ec))[0])/TOT_FISH[-1])
+                FISH_EC_ratio.append(len(np.where((fish_ec))[0])/TOT_FISH[-1])
             if(TOT_FISH[-1]==0):
                 FISH_CHROM_RATIO.append(0)
             else:
-                FISH_CHROM_RATIO.append(len(np.where((fish*chrom))[0])/TOT_FISH[-1])
+                FISH_CHROM_RATIO.append(len(np.where((fish_chrom))[0])/TOT_FISH[-1])
 
             df = pd.DataFrame({'image_name':IMG_NAME, 'ec_pixels':TOT_EC,
-                'chrom_pixels':TOT_CHROM, 'fish_pixels({})'.format(FISH_COLOR):TOT_FISH, 'ec+fish':FISH_EC, 'chrom+fish':FISH_CHROM,
-                '(ec+fish)/fish':FISH_EC_ratio, '(chrom+fish)/fish': FISH_CHROM_RATIO})
+                'chrom_pixels':TOT_CHROM, 'fish_pixels({})'.format(FISH_COLOR):TOT_FISH, 'ec+fish pixels':FISH_EC, 'chrom+fish pxiels':FISH_CHROM,
+                '(ec+fish pixels)/fish':FISH_EC_ratio, '(chrom+fish pixels)/fish': FISH_CHROM_RATIO, '(num ecDNA + fish':numecDNA[1]})
             df.to_csv((inputfile + '/ec_fish.csv'))
+
     print("FISH analysis complete, successfully exited...")
     K.clear_session()
 if __name__ == "__main__":
