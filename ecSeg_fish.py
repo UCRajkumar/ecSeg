@@ -103,20 +103,14 @@ def main(argv):
             if ext.lower() == '.tif':
                 print('Segmenting',f)
                 predict(model, inputfile, (f))
-    IMG_NAME = []
-    TOT_EC = []
-    TOT_CHROM = []
-    FISH_EC_ratio = []
-    FISH_CHROM_RATIO = []
-    TOT_FISH = []
-    FISH_EC = []
-    FISH_CHROM = []
+    df = pd.DataFrame(columns=['image_name', 'ec_pixels', 'chrom_pixels', 'fish_pixels({})'.format(FISH_COLOR), 'ec+fish pixels', 
+    'chrom+fish pxiels', '(ec+fish pixels)/fish', '(chrom+fish pixels)/fish', '# of ecDNA + fish'])
     for f in os.listdir(inputfile):
         name = os.path.splitext(f)[0]
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
             print("Processing ", name)
-            IMG_NAME.append(f)
+            img_name = f
             I = Image.open((inputfile+'/' +f))
             if('I' in I.getbands()):
                 print(name, " isn't an RGB image and cannot be processed for FISH analysis")
@@ -135,29 +129,29 @@ def main(argv):
             fish = fish * nuc
             ec = (labels==3)
             chrom = (labels==2)
-            fish_ec = fish*ec
+            fish_ec_overlay = fish*ec
             fish_chrom = fish*chrom
-            TOT_FISH.append(len(np.where(fish)[0]))
-            TOT_EC.append(len(np.where(ec)[0]))
-            TOT_CHROM.append(len(np.where(chrom)[0]))
-            FISH_EC.append(len(np.where((fish_ec))[0]))
-            FISH_CHROM.append(len(np.where((fish_chrom))[0]))
+            tot_fish = len(np.where(fish)[0])
+            tot_ec = len(np.where(ec)[0])
+            tot_chrom = len(np.where(chrom)[0])
+            fish_ec = len(np.where((fish_ec_overlay))[0])
+            fish_chrom = len(np.where((fish_chrom))[0])
             
-            numecDNA = measure.label(fish_ec, return_num = True) #compute number of ecDNA
+            numecDNA = measure.label(fish_ec_overlay, return_num = True) #compute number of ecDNA
             
-            if(TOT_FISH[-1]==0):
-                FISH_EC_ratio.append(0)
+            if(tot_fish==0):
+                fish_ec_ratio = 0
             else:
-                FISH_EC_ratio.append(len(np.where((fish_ec))[0])/TOT_FISH[-1])
-            if(TOT_FISH[-1]==0):
-                FISH_CHROM_RATIO.append(0)
+                fish_ec_ratio = len(np.where((fish_ec_overlay))[0])/tot_fish
+            if(tot_fish==0):
+                fish_chrom_ratio = 0
             else:
-                FISH_CHROM_RATIO.append(len(np.where((fish_chrom))[0])/TOT_FISH[-1])
-
-            df = pd.DataFrame({'image_name':IMG_NAME, 'ec_pixels':TOT_EC,
-                'chrom_pixels':TOT_CHROM, 'fish_pixels({})'.format(FISH_COLOR):TOT_FISH, 'ec+fish pixels':FISH_EC, 'chrom+fish pxiels':FISH_CHROM,
-                '(ec+fish pixels)/fish':FISH_EC_ratio, '(chrom+fish pixels)/fish': FISH_CHROM_RATIO, 'number of ecDNA + fish':numecDNA[1]})
-            df.to_csv((inputfile + '/ec_fish.csv'))
+                fish_chrom_ratio = len(np.where((fish_chrom))[0])/tot_fish
+            print(numecDNA[1])
+            df = df.append({'image_name':img_name, 'ec_pixels':tot_ec,
+                'chrom_pixels':tot_chrom, 'fish_pixels({})'.format(FISH_COLOR):tot_fish, 'ec+fish pixels':fish_ec, 'chrom+fish pxiels':fish_chrom,
+                '(ec+fish pixels)/fish':fish_ec_ratio, '(chrom+fish pixels)/fish': fish_chrom_ratio, '# of ecDNA + fish' : numecDNA[1]}, ignore_index=True)
+        df.to_csv((inputfile + '/ec_fish.csv'))
 
     print("FISH analysis complete, successfully exited...")
     K.clear_session()
