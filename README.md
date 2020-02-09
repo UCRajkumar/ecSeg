@@ -11,7 +11,7 @@ We highly recommend installing ecSeg through a conda environemnt.
 ```
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
-conda create -n ecseg python=3.7 opencv tqdm scikit-image keras Pillow=5.4.1 matplotlib=3.0.3
+conda create -n ecseg python=3.7 opencv tqdm scikit-image keras Pillow=5.4.1 matplotlib=3.0.3 pandas
 conda activate ecseg
 ```
 
