@@ -19,6 +19,12 @@ if sys.version_info[0] < 3:
     raise Exception("Must run with Python version 3 or higher")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
+def pre_proc(img):
+    if(img.dtype == 'uint16'):
+        img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
+    img = cv2.resize(img, (1392, 1040), interpolation=cv2.INTER_CUBIC)
+    return img
+
 def main(argv):
     inputfile = './'
     model_name = 'ecDNA_ResUnet.h5'
@@ -112,6 +118,7 @@ def main(argv):
             print("Processing ", name)
             img_name = f
             I = Image.open((inputfile+'/' +f))
+            I = pre_proc(I)
             if('I' in I.getbands()):
                 print(name, " isn't an RGB image and cannot be processed for FISH analysis")
                 continue
