@@ -14,6 +14,8 @@ import cv2
 from keras.models import load_model
 from predict import predict
 from skimage import measure
+from skimage.io import imread
+from predict import pre_proc
 
 if sys.version_info[0] < 3:
     raise Exception("Must run with Python version 3 or higher")
@@ -117,22 +119,20 @@ def main(argv):
         if ext.lower() == '.tif':
             print("Processing ", name)
             img_name = f
-            I = Image.open((inputfile+'/' +f))
-            I = pre_proc(I)
-            if('I' in I.getbands()):
+            I = imread((inputfile+'/' +f))
+            if(len(I.shape)<3):
                 print(name, " isn't an RGB image and cannot be processed for FISH analysis")
                 continue
-
+            I = pre_proc(I)
             labels = np.load((inputfile+'/labels/'+name+'.npy'))
-            channels = I.split()
-            cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(channels[2])))
-            cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(channels[0])))
-            cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(channels[1])))
+            cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(I[...,2])))
+            cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(I[...,0])))
+            cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(I[...,1])))
             nuc = ~(labels==1)
             if('green' in FISH_COLOR):
-                fish = (np.array(channels[1]) > THRESHOLD)[:1024,:1280]
+                fish = (np.array(I[...,1]) > THRESHOLD)[:1024,:1280]
             else:
-                fish = (np.array(channels[0]) > THRESHOLD)[:1024,:1280]
+                fish = (np.array(I[...,0]) > THRESHOLD)[:1024,:1280]
             fish = fish * nuc
             ec = (labels==3)
             chrom = (labels==2)
@@ -154,7 +154,6 @@ def main(argv):
                 fish_chrom_ratio = 0
             else:
                 fish_chrom_ratio = len(np.where((fish_chrom))[0])/tot_fish
-            print(numecDNA[1])
             df = df.append({'image_name':img_name, 'ec_pixels':tot_ec,
                 'chrom_pixels':tot_chrom, 'fish_pixels({})'.format(FISH_COLOR):tot_fish, 'ec+fish pixels':fish_ec, 'chrom+fish pxiels':fish_chrom,
                 '(ec+fish pixels)/fish':fish_ec_ratio, '(chrom+fish pixels)/fish': fish_chrom_ratio, '# of ecDNA + fish' : numecDNA[1]}, ignore_index=True)
