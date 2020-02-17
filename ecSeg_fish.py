@@ -15,16 +15,15 @@ from keras.models import load_model
 from predict import predict
 from skimage import measure
 from skimage.io import imread
-from predict import pre_proc
 
 if sys.version_info[0] < 3:
     raise Exception("Must run with Python version 3 or higher")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-def pre_proc(img):
+def resize(img, shape):
     if(img.dtype == 'uint16'):
         img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
-    img = cv2.resize(img, (1392, 1040), interpolation=cv2.INTER_CUBIC)
+    print(shape)
     return img
 
 def main(argv):
@@ -123,8 +122,9 @@ def main(argv):
             if(len(I.shape)<3):
                 print(name, " isn't an RGB image and cannot be processed for FISH analysis")
                 continue
-            I = pre_proc(I)
+                
             labels = np.load((inputfile+'/labels/'+name+'.npy'))
+            I = pre_proc(I, labels.shape)
             cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(I[...,2])))
             cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(I[...,0])))
             cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(I[...,1])))
