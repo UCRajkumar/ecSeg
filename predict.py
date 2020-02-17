@@ -82,7 +82,9 @@ def pre_proc(img):
     
     blur = cv2.GaussianBlur(img,(5,5),0)
     ret3,th3 = cv2.threshold(blur,0,1,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5):
+    #Ensure image is black background by binarizing and checking if number of white pixels 
+    #is greater than 50% of total pixels
+    if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5): 
         img = ~img
 
     img = np.expand_dims(img, axis=-1)
