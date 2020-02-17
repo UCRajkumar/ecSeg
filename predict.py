@@ -77,8 +77,6 @@ def inference(img):
 def pre_proc(img):
     if(img.dtype == 'uint16'):
         img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
-        
-    img = cv2.resize(img, (1392, 1040), interpolation=cv2.INTER_CUBIC)
     if(len(img.shape) > 2):
         img = img[:,:,2]
     
