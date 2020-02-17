@@ -77,15 +77,17 @@ def inference(img):
 def pre_proc(img):
     if(img.dtype == 'uint16'):
         img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
-
+        
     img = cv2.resize(img, (1392, 1040), interpolation=cv2.INTER_CUBIC)
-
-    if(len(img.shape) == 2):
-        img = np.expand_dims(img, axis=-1)
-    else:
+    if(len(img.shape) > 2):
         img = img[:,:,2]
-        img = np.expand_dims(img, axis=-1)
+    
+    blur = cv2.GaussianBlur(img,(5,5),0)
+    ret3,th3 = cv2.threshold(blur,0,1,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5):
+        img = ~img
 
+    img = np.expand_dims(img, axis=-1)
     return img
 
 def crop(img):
