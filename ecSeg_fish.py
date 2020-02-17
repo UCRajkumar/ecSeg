@@ -20,12 +20,6 @@ if sys.version_info[0] < 3:
     raise Exception("Must run with Python version 3 or higher")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-def resize(img, shape):
-    if(img.dtype == 'uint16'):
-        img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
-    print(shape)
-    return img
-
 def main(argv):
     inputfile = './'
     model_name = 'ecDNA_ResUnet.h5'
@@ -123,19 +117,27 @@ def main(argv):
                 print(name, " isn't an RGB image and cannot be processed for FISH analysis")
                 continue
                 
+            if(I.dtype == 'uint16'):
+                I = cv2.convertScaleAbs(I, alpha=(255.0/65535.0))
+                
             labels = np.load((inputfile+'/labels/'+name+'.npy'))
-            I = pre_proc(I, labels.shape)
+            height = labels.shape[0]; width = labels.shape[1]
+            
             cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(I[...,2])))
             cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(I[...,0])))
             cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(I[...,1])))
+            
             nuc = ~(labels==1)
+            
             if('green' in FISH_COLOR):
-                fish = (np.array(I[...,1]) > THRESHOLD)[:1024,:1280]
+                fish = (np.array(I[...,1]) > THRESHOLD)[:height,:width]
             else:
-                fish = (np.array(I[...,0]) > THRESHOLD)[:1024,:1280]
+                fish = (np.array(I[...,0]) > THRESHOLD)[:height,:width]
+                
             fish = fish * nuc
             ec = (labels==3)
             chrom = (labels==2)
+            
             fish_ec_overlay = fish*ec
             fish_chrom = fish*chrom
             tot_fish = len(np.where(fish)[0])
