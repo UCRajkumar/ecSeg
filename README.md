@@ -24,7 +24,6 @@ python3 ecSeg.py -i "input_path"
 ### Input specifications
 1. input_path must be enclosed by double quotes "". For example: `python3 ecSeg.py -i "C:/Users/Utkrisht/path"`
 2. Software will only read the `.tif` images in the input folder
-3. Input images will be resized to `1040x1392`
 4. Optionally, you can provide a model name using "-m" if you train a new model.
 
 Note: The flag, "-i," must be provided.
@@ -34,8 +33,6 @@ Note: The flag, "-i," must be provided.
 2.  **Labels folder** will contain the RGB version of the post-processed segmentation. It will also contain raw values saved as a `.npy` file.
 
 #### Segmentation details
-
-The segmented images will be in dimension `1024x1280`.
 
 To extract individual classes:
 
