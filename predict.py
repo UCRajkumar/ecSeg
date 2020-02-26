@@ -43,7 +43,7 @@ def inference(img):
         O = I
         s = generate_binary_structure(2,2)
         labeled_array, num_features = label(I,  structure=s)
-        for i in range(146, num_features):
+        for i in range(1, num_features):
             ind = (labeled_array == i)
             if(np.any(I[ind]==class_id)):
                 O[ind] = class_id
