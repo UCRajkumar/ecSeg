@@ -19,6 +19,7 @@ from skimage.morphology import diamond, opening, binary_dilation, binary_erosion
 from matplotlib import pyplot as plt
 from skimage.filters import threshold_minimum
 from keras.models import Model
+import matplotlib.colors as colors
 
 
 if sys.version_info[0] < 3:
@@ -148,7 +149,10 @@ def predict(model, path, img_name):
     print("Saving ", img_name)
     data_path = path+'/labels/'+ os.path.splitext(img_name)[0]
     im_path = path+'/labels/'+ os.path.splitext(img_name)[0] + '.tif'
-    plt.imsave(im_path, img.astype('uint8'))
+#             # blue     # white    #green     #white
+    cmap1 = ['#386cb0', '#ffff99', '#7fc97f', '#f0027f']
+    cmap = colors.ListedColormap(cmap1) 
+    plt.imsave(im_path, img.astype('uint8'), cmap=cmap)
     np.save(data_path, img)
 
     compute_stat(img, path, img_name)
