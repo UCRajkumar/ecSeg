@@ -18,7 +18,7 @@ conda activate ecseg
 ## Run ecSeg
 To produce segmentations, run ecSeg.py:
 ```
-python3 ecSeg.py -i "input_path"
+python ecSeg.py -i "input_path"
 ```
 
 ### Input specifications
@@ -47,7 +47,7 @@ ecDNA = (seg_I==3)
 ## Run ecSeg_fish
 To analyze fish interaction run ecSef_fish.py:
 ```
-python3 ecSeg_fish.py -i "input_path"
+python ecSeg_fish.py -i "input_path"
 ```
 
 ### Input specifications
