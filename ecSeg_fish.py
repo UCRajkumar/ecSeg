@@ -151,11 +151,11 @@ def main(argv):
             if(tot_fish==0):
                 fish_ec_ratio = 0
             else:
-                fish_ec_ratio = len(np.where((fish_ec_overlay))[0])/tot_fish
+                fish_ec_ratio = fish_ec/tot_fish
             if(tot_fish==0):
                 fish_chrom_ratio = 0
             else:
-                fish_chrom_ratio = len(np.where((fish_chrom))[0])/tot_fish
+                fish_chrom_ratio = fish_chrom/tot_fish
             df = df.append({'image_name':img_name, 'ec_pixels':tot_ec,
                 'chrom_pixels':tot_chrom, 'fish_pixels({})'.format(FISH_COLOR):tot_fish, 'ec+fish pixels':fish_ec, 'chrom+fish pxiels':fish_chrom,
                 '(ec+fish pixels)/fish':fish_ec_ratio, '(chrom+fish pixels)/fish': fish_chrom_ratio, '# of ecDNA + fish' : numecDNA[1]}, ignore_index=True)
