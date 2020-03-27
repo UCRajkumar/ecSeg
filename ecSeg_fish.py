@@ -123,7 +123,6 @@ def main(argv):
             labels = np.load((inputfile+'/labels/'+name+'.npy'))
             height = labels.shape[0]; width = labels.shape[1]
             
-            cv2.imwrite((inputfile+'/dapi/'+f),cv2.bitwise_not(np.uint8(I[...,2])))
             cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(I[...,0])))
             cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(I[...,1])))
             
