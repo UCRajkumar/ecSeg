@@ -75,7 +75,7 @@ def inference(img):
     img[binary_dilation(img == 3, diamond(1))] = 3
     return img
 
-def pre_proc(img):
+def pre_proc(img, path):
     if(img.dtype == 'uint16'):
         img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
     if(len(img.shape) > 2):
@@ -87,7 +87,8 @@ def pre_proc(img):
     #is greater than 50% of total pixels
     if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5): 
         img = ~img
-
+    
+    cv2.imwrite(path, cv2.bitwise_not(img))
     img = np.expand_dims(img, axis=-1)
     return img
 
@@ -135,7 +136,7 @@ def compute_stat(img, path, img_name):
 def predict(model, path, img_name):
     name = path+'/'+img_name
     img = imread(name)
-    img = pre_proc(img)
+    img = pre_proc(img, path+'/dapi/'+img_name)
     crops, vcrop, hcrop = crop(img)
     pred = []   
     for i in range(0,len(crops)):
