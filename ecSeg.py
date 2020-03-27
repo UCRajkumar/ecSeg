@@ -33,6 +33,11 @@ def main(argv):
       pass
     else:
       os.mkdir((inputfile+'/coordinates'))
+    
+    if(os.path.exists((inputfile+'/dapi'))):
+      pass
+    else:
+      os.mkdir((inputfile+'/dapi'))
 
     if(os.path.exists((inputfile+'/labels'))):
       pass
