@@ -2,13 +2,14 @@
 #Author: Utkrisht Rajkumar
 #Email: urajkuma@eng.ucsd.edu
 #Produces segmentation and post-processes the image
+#Code to crop with overlays and re-stitch borrowed from https://github.com/neuropoly/axondeepseg
 
 from os import listdir
 import os
 from os.path import isfile, join
 import sys
 import numpy as np
-from skimage import measure
+from skimage import measure, img_as_ubyte
 from skimage.io import imread, imshow, imread_collection, concatenate_images
 from scipy.ndimage import label, generate_binary_structure, binary_fill_holes
 from skimage.color import label2rgb, rgb2gray, gray2rgb
@@ -92,36 +93,111 @@ def pre_proc(img, path):
     img = np.expand_dims(img, axis=-1)
     return img
 
-def crop(img):
-    crops = []
-    y = 1; x = 1
-    shape = img.shape
-    vcrop = int(shape[0]/DIM)
-    hcrop = int(shape[1]/DIM)
-    for a in range(0, hcrop):
-        y = 1
-        for k in range(0, vcrop):
-            train = img[y:y+DIM, x:x+DIM]
-            crops.append(train)
-            y = y+DIM
-        x = x+DIM
-    return crops, vcrop, hcrop
+def im2patches_overlap(img, overlap_value=25, scw=256): #See https://github.com/neuropoly/axondeepseg
+    '''
+    Convert an image into patches.
+    :param img: the image to convert.
+    :param overlap_value: Int, the number of pixels to use when overlapping the predictions.
+    :param scw: Int, input size.
+    :return: the original image, a list of patches, and their positions.
+    '''
 
-def stitch(pred, vcrop, hcrop):
-    stitched_im = np.ones((256*vcrop,1,NUM_CLASSES))
-    index = -1
-    for j in range (1,hcrop+1):
-        index = index +1
-        if(index >=hcrop*vcrop):
-            break
-        row = pred[index]
-        for k in range(1,vcrop):
-            index = index + 1
-            I = pred[index]
-            row = np.vstack((row, I))
-        stitched_im = np.hstack((stitched_im, row))
-    img = np.argmax(stitched_im[:, 1:, :], axis=2)
-    return img
+    # First we crop the image to get the context
+    cropped = img[overlap_value:-overlap_value, overlap_value:-overlap_value]
+
+    # Then we create patches using the prediction window
+    spw = scw - 2 * overlap_value  # size prediction windows
+
+    qh, rh = divmod(cropped.shape[0], spw)
+    qw, rw = divmod(cropped.shape[1], spw)
+
+    # Creating positions of prediction windows
+    L_h = [spw * e for e in range(qh)]
+    L_w = [spw * e for e in range(qw)]
+
+    # Then if there is a remainder we take the last positions (overlap on the last predictions)
+    if rh != 0:
+        L_h.append(cropped.shape[0] - spw)
+    if rw != 0:
+        L_w.append(cropped.shape[1] - spw)
+
+    xx, yy = np.meshgrid(L_h, L_w)
+    P = [np.ravel(xx), np.ravel(yy)]
+    L_pos = [[P[0][i], P[1][i]] for i in range(len(P[0]))]
+
+    # These positions are also the positions of the context windows in the base image coordinates !
+    L_patches = []
+    for e in L_pos:
+        patch = img[e[0]:e[0] + scw, e[1]:e[1] + scw]
+        L_patches.append(patch)
+
+    return [img, L_patches, L_pos]
+
+def patches2im_overlap(L_patches, L_pos, overlap_value=25, scw=256): #See https://github.com/neuropoly/axondeepseg
+
+    '''
+    Stitches patches together to form an image.
+    :param L_patches: List of segmented patches.
+    :param L_pos: List of positions of the patches in the image to form.
+    :param overlap_value: Int, number of pixels to overlap.
+    :param scw: Int, patch size.
+    :return: Stitched segmented image.
+    '''
+
+    spw = scw - 2 * overlap_value
+    # L_pred = [e[cropped_value:-cropped_value,cropped_value:-cropped_value] for e in L_patches]
+    # First : extraction of the predictions
+    h_l, w_l = np.max(np.stack(L_pos), axis=0)
+    L_pred = []
+    new_img = np.zeros((h_l + scw, w_l + scw, 4))
+
+    for i, e in enumerate(L_patches):
+        if L_pos[i][0] == 0:
+            if L_pos[i][1] == 0:
+                new_img[0:overlap_value, 0:overlap_value] = e[0:overlap_value, 0:overlap_value]
+                new_img[overlap_value:scw - overlap_value, 0:overlap_value] = e[overlap_value:-overlap_value,
+                                                                              0:overlap_value]
+                new_img[0:overlap_value, overlap_value:scw - overlap_value] = e[0:overlap_value,
+                                                                              overlap_value:-overlap_value]
+            else:
+                if L_pos[i][1] == w_l:
+                    new_img[0:overlap_value, -overlap_value:] = e[0:overlap_value, -overlap_value:]
+                new_img[0:overlap_value, L_pos[i][1] + overlap_value:L_pos[i][1] + scw - overlap_value] = e[
+                                                                                                          0:overlap_value,
+                                                                                                          overlap_value:-overlap_value]
+
+        if L_pos[i][1] == 0:
+            if L_pos[i][0] != 0:
+                new_img[L_pos[i][0] + overlap_value:L_pos[i][0] + scw - overlap_value, 0:overlap_value] = e[
+                                                                                                          overlap_value:-overlap_value,
+                                                                                                          0:overlap_value]
+
+        if L_pos[i][0] == h_l:
+            if L_pos[i][1] == w_l:
+                new_img[-overlap_value:, -overlap_value:] = e[-overlap_value:, -overlap_value:]
+                new_img[h_l + overlap_value:-overlap_value, -overlap_value:] = e[overlap_value:-overlap_value,
+                                                                               -overlap_value:]
+                new_img[-overlap_value:, w_l + overlap_value:-overlap_value] = e[-overlap_value:,
+                                                                               overlap_value:-overlap_value]
+            else:
+                if L_pos[i][1] == 0:
+                    new_img[-overlap_value:, 0:overlap_value] = e[-overlap_value:, 0:overlap_value]
+
+                new_img[-overlap_value:, L_pos[i][1] + overlap_value:L_pos[i][1] + scw - overlap_value] = e[
+                                                                                                          -overlap_value:,
+                                                                                                          overlap_value:-overlap_value]
+        if L_pos[i][1] == w_l:
+            if L_pos[i][1] != h_l:
+                new_img[L_pos[i][0] + overlap_value:L_pos[i][0] + scw - overlap_value, -overlap_value:] = e[
+                                                                                                          overlap_value:-overlap_value,
+                                                                                                          -overlap_value:]
+
+    L_pred = [e[overlap_value:-overlap_value, overlap_value:-overlap_value] for e in L_patches]
+    L_pos_corr = [[e[0] + overlap_value, e[1] + overlap_value] for e in L_pos]
+    for i, e in enumerate(L_pos_corr):
+        new_img[e[0]:e[0] + spw, e[1]:e[1] + spw] = L_pred[i]
+
+    return new_img
 
 def compute_stat(img, path, img_name):
     numecDNA = measure.label(img==3, return_num = True) #compute number of ecDNA
@@ -137,22 +213,22 @@ def predict(model, path, img_name):
     name = path+'/'+img_name
     img = imread(name)
     img = pre_proc(img, path+'/dapi/'+img_name)
-    crops, vcrop, hcrop = crop(img)
-    pred = []   
-    for i in range(0,len(crops)):
-        x = np.expand_dims(crops[i], axis=0)
-        comb_pred = np.squeeze(model.predict(x, verbose=0))
-        pred.append(comb_pred)
-    
-    img = stitch(pred, vcrop, hcrop)
-    img = inference(img)
+    img, patches, pos = im2patches_overlap(img) #crop into patches
+    #patches = [np.expand_dims(x, -1) for x in patches] 
+    preds = model.predict_on_batch(np.array(patches)) #predict on patches
+    img = patches2im_overlap(preds, pos) #stitch image together
+    img = img_as_ubyte(img) #convert to uint8
+    img = np.argmax(img[:, :, :], axis=2) #flatten the channels
+    img = inference(img) 
 
     print("Saving ", img_name)
     data_path = path+'/labels/'+ os.path.splitext(img_name)[0]
     im_path = path+'/labels/'+ os.path.splitext(img_name)[0] + '.tif'
 #             # blue     # white    #green     #white
+
     cmap1 = ['#386cb0', '#ffff99', '#7fc97f', '#f0027f']
     cmap = colors.ListedColormap(cmap1) 
+    
     plt.imsave(im_path, img.astype('uint8'), cmap=cmap)
     np.save(data_path, img)
 
