@@ -31,7 +31,7 @@ Note: The flag, "-i," must be provided.
 ### Output 
 1. **Coordinates folder** will be created which will contain a coordinate file for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
 2.  **Labels folder** will contain the RGB version of the post-processed segmentation. It will also contain raw values saved as a `.npy` file.
-3. If you would like to see the gray-scale dapi version of the image, please run ecSeg_fish.py below
+3. **dapi folder** will be created and will contain the gray-scale dapi version of the images.
 
 #### Segmentation details
 
@@ -62,6 +62,11 @@ Arguments | Description
 `-p` | Segment boolean (optional). Must be 'True' or 'False'. Indicates whether to re-segment images. Enter 'False' if you have already segmented the images
 `-m` | Model name (optional). Name of the trained model. Must have '.h5' extension.
 
+### Output
+1. All the outputs from ecSeg.py. See above.
+2. **green folder** will contain the gray-scale version of the green fish signal.
+3. **red folder** will contain the gray-scale version of red fish signal.
+4. **ec_fish.csv** will contain fish interaction stats for each image. See [ecSeg_fish_analysis](https://github.com/UCRajkumar/ecSeg/edit/master/ecSeg_fish_analysis.md). 
 ## Training/test Dataset
 Training and test dataset can be downloaded from:
 ```
