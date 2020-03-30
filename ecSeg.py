@@ -45,7 +45,7 @@ def main(argv):
       os.mkdir((inputfile+'/labels'))
     
     print("Loading in trained model...")
-    model = load_model(model_name) #load model
+    model = load_model(model_name, compile=False) #load model
     print("Model loaded.")
     for f in os.listdir(inputfile): #get all images in path
         ext = os.path.splitext(f)[1]
