@@ -46,6 +46,7 @@ def main(argv):
     
     print("Loading in trained model...")
     model = load_model(model_name) #load model
+    print('Model loaded.")
     for f in os.listdir(inputfile): #get all images in path
         ext = os.path.splitext(f)[1]
         if ext.lower() == '.tif':
