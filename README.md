@@ -1,6 +1,6 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-ecSeg is a tool used to segment and analyze metaphase images containing ecDNA. It also has an extension to analyze FISH probes on metaphase images. ecSeg is the latest version of ECdetect used to perform the analysis in [Extrachromosomal oncogene amplification drives tumour evolution and genetic heterogeneity, Tuner 2017](https://www.nature.com/articles/nature21356). 
+ecSeg is a tool used to segment and analyze metaphase images containing ecDNA. It also has an extension to analyze FISH probes on metaphase images. ecSeg is the latest version of ECdetect used to perform the analysis in [Extrachromosomal oncogene amplification drives tumour evolution and genetic heterogeneity, Turner 2017](https://www.nature.com/articles/nature21356). 
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
