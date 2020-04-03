@@ -29,9 +29,10 @@ python ecSeg.py -i "input_path"
 Note: The flag, "-i," must be provided.
 
 ### Output 
-1. **Coordinates folder** will be created which will contain a coordinate file for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
-2.  **Labels folder** will contain the RGB version of the post-processed segmentation. It will also contain raw values saved as a `.npy` file.
-3. **dapi folder** will be created and will contain the gray-scale dapi version of the images.
+1. **Coordinates folder** - Contains coordinate files for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
+2.  **Labels folder** - Contains the RGB version of the post-processed segmentation and the raw values saved as a `.npy` file.
+3. **dapi folder** - Contains the gray-scale dapi version of the images.
+4. **num_ecDNAs.csv** - Contains a list of all the images that were processed and the number of ecDNA in each image. 
 
 #### Segmentation details
 
