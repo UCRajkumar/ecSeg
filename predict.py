@@ -207,6 +207,7 @@ def compute_stat(img, path, img_name):
         for prop in RP:
             (x, y) = prop.centroid
             f.write('{}, {}\n'.format(x, y))
+    return numecDNA[1]
 
 #Crops large size image, predicts on patches, and restitches image
 def predict(model, path, img_name):
@@ -220,11 +221,10 @@ def predict(model, path, img_name):
     img = img_as_ubyte(img) #convert to uint8
     img = np.argmax(img[:, :, :], axis=2) #flatten the channels
     img = inference(img) 
-
     print("Saving ", img_name)
     data_path = path+'/labels/'+ os.path.splitext(img_name)[0]
     im_path = path+'/labels/'+ os.path.splitext(img_name)[0] + '.tif'
-#             # blue     # white    #green     #white
+             # blue     # white    #green     #white
 
     cmap1 = ['#386cb0', '#ffff99', '#7fc97f', '#f0027f']
     cmap = colors.ListedColormap(cmap1) 
@@ -232,5 +232,5 @@ def predict(model, path, img_name):
     plt.imsave(im_path, img.astype('uint8'), cmap=cmap)
     np.save(data_path, img)
 
-    compute_stat(img, path, img_name)
-    return im_path
+    num_ecDNA = compute_stat(img, path, img_name)
+    return img_name, num_ecDNA
