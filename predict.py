@@ -216,7 +216,7 @@ def predict(model, path, img_name):
     img = pre_proc(img, path+'/dapi/'+img_name)
     img, patches, pos = im2patches_overlap(img) #crop into patches
     #patches = [np.expand_dims(x, -1) for x in patches] 
-    preds = model.predict_on_batch(np.array(patches)) #predict on patches
+    preds = model.predict(np.array(patches)) #predict on patches
     img = patches2im_overlap(preds, pos) #stitch image together
     img = img_as_ubyte(img) #convert to uint8
     img = np.argmax(img[:, :, :], axis=2) #flatten the channels
