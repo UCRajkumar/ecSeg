@@ -34,14 +34,12 @@ NUM_CLASSES = 4
 def inference(img):
     #if ecDNA is touching chromosome/nuclei, mark that whole
     #component as that class
-    def merge_comp(img, class_id):  
+    def merge_comp(img, class_id=2):  
         I = img
-        if(class_id == 1):
-            mask_id = 2
-        else:
-            mask_id = 1
+        mask_id = 1
+        if(class_id == 1): mask_id = 2
         temp = I == mask_id
-        I[temp] = 0
+        I[temp] = 0 #remove everything with mask_id
         O = I
         s = generate_binary_structure(2,2)
         labeled_array, num_features = label(I,  structure=s)
@@ -59,19 +57,46 @@ def inference(img):
         img[temp == 1] = class_id
         return img
 
-    #remove ecDNA too small and mark ecDNA that are too large as chromosomes
     def size_thresh(img):
-        RP = measure.regionprops(measure.label(img == 3))
-        for region in RP:
-            if(region.area > 125):
-                img[tuple(region.coords.T)] = 2
-            if(region.area < 15):
-                img[tuple(region.coords.T)] = 0
+        nuc_regs = measure.regionprops(measure.label(img == 1)) #Set small nucleic regions as background
+        chrom_regs = measure.regionprops(measure.label(img == 2))
+        for r in nuc_regs:
+            if(r.area < np.mean([c.area for c in chrom_regs])):
+                img[tuple(r.coords.T)] = 0 
+
+        chrom_regs = measure.regionprops(measure.label(img == 2)) #Set small chromosomal regions as ecDNA
+        ec_regs = measure.regionprops(measure.label(img == 3))
+        for r in chrom_regs:
+            if(r.area < np.mean([c.area for c in ec_regs])):
+                img[tuple(r.coords.T)] = 3
         return img
 
-    img = fill_holes(fill_holes(fill_holes(img, 1), 2), 3) #fill holes
+    img = fill_holes(fill_holes(img, 1), 2) #fill holes
+    #############split DMs#######################
+    temp = binary_erosion(img == 3, diamond(1)) #break bridges between connected components
+    img[img == 3] = 0 #reset ecDNA
+    img[temp == 1] = 3 #add new ecDNA
+    #############################################
     img = size_thresh(img)
+    #dilation XOR erosion of ecDNA. Smoothens ecDNA borders by enlarging and then evenly removing the border
     img[binary_dilation(img == 3, diamond(1)) ^ binary_erosion(img == 3, diamond(1))] = 0
+
+    chrom_regs = measure.regionprops(measure.label(img == 2))
+    nuc_regs = measure.regionprops(measure.label(img == 1))
+    c_y = [c.centroid[0] for c in chrom_regs]; c_x= [c.centroid[1] for c in chrom_regs]
+    n_cent = [n.centroid for n in nuc_regs]
+
+    ######check if there is a nuclei in the middle of the metaphase###############
+    min_chrom_count = 5; v=70
+    for idx, n in enumerate(n_cent):
+        count = 0
+        ######## check if chromosomes are close to metaphase and if there are chromosomes are surrounding the nuclei###
+        left = (len(np.where((c_x > n[1]) & (c_x < n[1]+v))[0])> min_chrom_count)
+        right = (len(np.where((c_x < n[1]) & (c_x > n[1]-v))[0]) > min_chrom_count)
+        bottom = (len(np.where((c_y < n[0]) & (c_y > n[0]-v))[0])> min_chrom_count)
+        top = (len(np.where((c_y > n[0]) & (c_y < n[0]+v))[0]) > min_chrom_count)
+        if((left*bottom & right*top) or (bottom*right & top*left)): #check if two opposing quadrants contain chrs
+            img[tuple(nuc_regs[idx].coords.T)] = 0
     img = merge_comp(merge_comp(img, 1), 2)
     img[binary_dilation(img == 3, diamond(1))] = 3
     return img
@@ -216,7 +241,7 @@ def predict(model, path, img_name):
     img = pre_proc(img, path+'/dapi/'+img_name)
     img, patches, pos = im2patches_overlap(img) #crop into patches
     #patches = [np.expand_dims(x, -1) for x in patches] 
-    preds = model.predict(np.array(patches)) #predict on patches
+    preds = model.predict_on_batch(np.array(patches)) #predict on patches
     img = patches2im_overlap(preds, pos) #stitch image together
     img = img_as_ubyte(img) #convert to uint8
     img = np.argmax(img[:, :, :], axis=2) #flatten the channels
@@ -234,3 +259,5 @@ def predict(model, path, img_name):
 
     num_ecDNA = compute_stat(img, path, img_name)
     return img_name, num_ecDNA
+
+    
