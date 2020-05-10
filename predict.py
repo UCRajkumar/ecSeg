@@ -113,11 +113,10 @@ def pre_proc(img, path):
     #is greater than 50% of total pixels
     if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5): 
         img = ~img
-        img = cv2.GaussianBlur(img,(5,5),0)
-    else:
-        img = blur
-
+        blur = cv2.GaussianBlur(img,(5,5),0)
+    
     cv2.imwrite(path, cv2.bitwise_not(img))
+    img = blur
     img = np.expand_dims(img, axis=-1)
     return img
 
