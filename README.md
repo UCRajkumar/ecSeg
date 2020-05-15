@@ -58,7 +58,7 @@ Arguments | Description
 ---| ---|
 `-h` | Displays argument options
 `-i` | Path to folder containing images. Must be wrapped in double quotes. See example above on how to run ecSeg.py.
-`-c` | Fish color (optional). Must be 'green' or 'red'
+`-c` | Fish color (optional). Must be 'green' or 'red'. Default color is green.
 `-t` | Threshold value (optional). Threshold values must be [0, 255]. Indicates sensitivity of FISH interaction. 0 and 255 are the least and highest sensitivity, respectively
 `-p` | Segment boolean (optional). Must be 'True' or 'False'. Indicates whether to re-segment images. Enter 'False' if you have already segmented the images
 `-m` | Model name (optional). Name of the trained model. Must have '.h5' extension.
