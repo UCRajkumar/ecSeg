@@ -256,7 +256,7 @@ def predict(model, path, img_name):
     cmap1 = ['#386cb0', '#ffff99', '#7fc97f', '#f0027f']
     cmap = colors.ListedColormap(cmap1) 
     
-    plt.imsave(im_path, img.astype('uint8'), cmap=cmap)
+    plt.imsave(im_path, img.astype('uint8'), cmap=cmap, vmin=0, vmax=4)
     np.save(data_path, img)
 
     num_ecDNA = compute_stat(img, path, img_name)
