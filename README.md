@@ -26,7 +26,7 @@ python ecSeg.py -i "input_path"
 2. Software will only read the `.tif` images in the input folder
 4. Optionally, you can provide a model name using "-m" if you train a new model.
 
-Note: The flag, "-i," must be provided.
+Note: The "-i" flag must be provided.
 
 ### Output 
 1. **Coordinates folder** - Contains coordinate files for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
