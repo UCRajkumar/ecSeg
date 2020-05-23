@@ -86,10 +86,9 @@ full images | full sized images used for evaluation
 ```
 @article{Rajkumar2019,
     author = {Rajkumar, Utkrisht and Turner, Kristen and Luebeck, Jens and Deshpande, Viraj and Chandraker, Manmohan and Mischel, Paul and Bafna, Vineet},
-    doi = {10.1016/j.isci.2019.10.035},
     journal = {iScience},
     title = {{EcSeg: Semantic Segmentation of Metaphase Images Containing Extrachromosomal DNA}},
-    url = {https://doi.org/10.1016/j.isci.2019.10.035},
+    url = {https://github.com/ucrajkumar/ecseg},
     year = {2019}
 }
 ```
