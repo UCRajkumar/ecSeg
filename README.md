@@ -69,7 +69,7 @@ Arguments | Description
 3. **red folder** will contain the gray-scale version of red fish signal.
 4. **ec_fish.csv** will contain fish interaction stats for each image. See [ecSeg_fish_analysis](https://github.com/UCRajkumar/ecSeg/edit/master/ecSeg_fish_analysis.md). 
 ## Training/test Dataset
-Training and test dataset can be downloaded from:
+Training and test dataset (including ground truths) can be downloaded from:
 ```
 https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29b09f759795
 ```
@@ -77,9 +77,9 @@ https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29
 Dataset | Description
 ---|---|
 train_im| RGB patches used to train neural network 
-train_mask| mask for train_im patches 
+train_mask| ground truth for train_im patches 
 test_im|  RGB patches used to evaluate neural network 
-test_mask| mask for test_im patches 
+test_mask| ground truth for test_im patches 
 full images | full sized images used for evaluation
 
 ## Bibtex
