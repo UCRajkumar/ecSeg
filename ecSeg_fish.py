@@ -104,61 +104,66 @@ def main(argv):
             if ext.lower() == '.tif':
                 print('Segmenting',f)
                 predict(model, inputfile, (f))
+
     df = pd.DataFrame(columns=['image_name', 'ec_pixels', 'chrom_pixels', 'fish_pixels({})'.format(FISH_COLOR), 'ec+fish pixels', 
     'chrom+fish pxiels', '# of ecDNA', '# of ecDNA + fish'])
+
+
     for f in os.listdir(inputfile):
         name = os.path.splitext(f)[0]
         ext = os.path.splitext(f)[1]
+
         if ext.lower() == '.tif':
             print("Processing ", name)
             img_name = f
             I = imread((inputfile+'/' +f))
-            if(len(I.shape)<3):
-                print(name, " isn't an RGB image and cannot be processed for FISH analysis")
-                continue
-                
-            if(I.dtype == 'uint16'):
-                I = cv2.convertScaleAbs(I, alpha=(255.0/65535.0))
-                
+            tot_ec = 0; tot_chrom = 0; tot_fish = 0; fish_ec = 0; fish_chrom = 0; numecDNA=0; numecDNA_fish=0;
+            
             labels = np.load((inputfile+'/labels/'+name+'.npy'))
-            
-            cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(I[...,0])))
-            cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(I[...,1])))
-            
-            nuc = ~(labels==1) # mask of nucleic region
-            
-            if('green' in FISH_COLOR):
-                fish = (np.array(I[...,1]) > THRESHOLD)
-            else:
-                fish = (np.array(I[...,0]) > THRESHOLD)
-                
-            fish = fish * nuc #discard fish pixels in nucleic regions
             ec = (labels==3) #get ec region
             chrom = (labels==2) #get chrom region
-            
-            fish_ec_overlay = fish*ec
-            fish_chrom_overlay = fish*chrom
-            fish_ec = len(np.where((fish_ec_overlay))[0])
-            fish_chrom = len(np.where((fish_chrom_overlay))[0])
-            
-            tot_fish = len(np.where(fish)[0])
             tot_ec = len(np.where(ec)[0])
             tot_chrom = len(np.where(chrom)[0])
+            numecDNA = measure.label(ec, return_num = True)[1] #compute number of ecDNA
+
+            if(len(I.shape)<3):
+                print(name, " isn't an RGB image. Therefore, no FISH signals could be identified.")
+                tot_fish = 'N/A'; fish_ec = 'N/A'; fish_chrom = 'N/A'; numecDNA_fish = 'N/A'
             
-            numecDNA_fish = measure.label(fish_ec_overlay, return_num = True) #compute number of ecDNA
-            numecDNA = measure.label(ec, return_num = True) #compute number of ecDNA
-            
-            if(tot_fish==0):
-                fish_ec_ratio = 0
-                fish_chrom_ratio = 0
-            else:
-                fish_ec_ratio = fish_ec/tot_fish
-                fish_chrom_ratio = fish_chrom/tot_fish
+            else:                    
+                if(I.dtype == 'uint16'):
+                    I = cv2.convertScaleAbs(I, alpha=(255.0/65535.0))
                 
+                cv2.imwrite((inputfile+'/red/'+f),cv2.bitwise_not(np.uint8(I[...,0])))
+                cv2.imwrite((inputfile+'/green/'+f),cv2.bitwise_not(np.uint8(I[...,1])))
+                
+                nuc = ~(labels==1) # mask of nucleic region
+                
+                if('green' in FISH_COLOR):
+                    fish = (np.array(I[...,1]) > THRESHOLD)
+                else:
+                    fish = (np.array(I[...,0]) > THRESHOLD)
+                    
+                fish = fish * nuc #discard fish pixels in nucleic regions     
+                
+                fish_ec_overlay = fish*ec
+                fish_chrom_overlay = fish*chrom
+                fish_ec = len(np.where((fish_ec_overlay))[0])
+                fish_chrom = len(np.where((fish_chrom_overlay))[0])
+                tot_fish = len(np.where(fish)[0])
+                
+                numecDNA_fish = measure.label(fish_ec_overlay, return_num = True)[1] #compute number of ecDNA with fish
+                
+                if(tot_fish==0):
+                    fish_ec_ratio = 0
+                    fish_chrom_ratio = 0
+                else:
+                    fish_ec_ratio = fish_ec/tot_fish
+                    fish_chrom_ratio = fish_chrom/tot_fish
             df = df.append({'image_name':img_name, 'ec_pixels':tot_ec,
                 'chrom_pixels':tot_chrom, 'fish_pixels({})'.format(FISH_COLOR):tot_fish, 'ec+fish pixels':fish_ec, 'chrom+fish pxiels':fish_chrom,
-                '# of ecDNA' : numecDNA[1], '# of ecDNA + fish' : numecDNA_fish[1]}, ignore_index=True)
-        df.to_csv((inputfile + '/ec_fish.csv'))
+                '# of ecDNA' : numecDNA, '# of ecDNA + fish' : numecDNA_fish}, ignore_index=True)
+    df.to_csv((inputfile + '/ec_fish.csv'))
 
     print("FISH analysis complete, successfully exited...")
     K.clear_session()
