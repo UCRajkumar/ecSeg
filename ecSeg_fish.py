@@ -29,7 +29,7 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv,"h:i:c:t:p:m:")
     except getopt.GetoptError:
-        print('ecSeg.py arguments: \n',
+        print('ecSeg_fish.py arguments: \n',
             '-h Displays argument options'  
             '-i <input path> (File path must end in \'\') \n',
             '-c <color of FISH> (\'green\' or \'red\') \n',
@@ -39,7 +39,7 @@ def main(argv):
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h"):
-            print('ecSeg.py arguments: \n', 
+            print('ecSeg_fish.py arguments: \n', 
                 '-i <input path> (File path must end in \'\') \n',
                 '-c <color of FISH> (\'green\' or \'red\') \n',
                 '-t <threshold> threshold values must be [0, 255]. Indicates sensitivity of FISH interaction.', 
