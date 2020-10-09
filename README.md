@@ -1,38 +1,62 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-This repository is the official version of ecSeg, a tool used to segment and analyze metaphase images containing ecDNA. It also has an extension to analyze FISH probes on metaphase images. ecSeg is the latest version of ECdetect used to perform the analysis in [Extrachromosomal oncogene amplification drives tumour evolution and genetic heterogeneity, Turner 2017](https://www.nature.com/articles/nature21356). The dataset can be downloaded from [here](https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29b09f759795). Please cite (Bibtex at the bottom) the following reference if using ecSeg in your work: 
+This repository is the official version of ecSeg, a tool used to quantify ecDNA in metaphase images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following reference if using ecSeg in your work: 
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
-## Installation
-This platform requires a modern processor with support for AVX instructions and python 3.5 or greater. 
+## Directory structure
 
-We highly recommend installing ecSeg through a conda environemnt.
+| File             | Description                                 |
+| ---------------- | ------------------------------------------- |
+| config.yaml      | File to set parameters for different tasks  |
+| Makefile         | Makefile to run the different scripts       |
+| requirements.txt | Requirement file for setting up environment |
+| setup.sh         | Script to install ecSeg package             |
+
+...
+
+| Folder | Description                        |
+| ------ | ---------------------------------- |
+| src    | Contains python scripts            |
+| models | Contains the neural network models |
+| images | Example images to test ecSeg       |
+
+## Installation
+
+This platform requires a modern processor with support for AVX instructions, python 3.5+, and conda installed. 
+
 ```
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
-conda create -n ecseg python=3.7 opencv tqdm scikit-image keras Pillow=5.4.1 matplotlib=3.0.3 pandas
+make setup
+```
+
+Activate the ecSeg environment before executing any tasks:
+
+```
 conda activate ecseg
 ```
 
-## Run ecSeg
-To produce segmentations, run ecSeg.py:
-```
-python ecSeg.py -i "input_path"
-```
+## Input Image Specifications
 
-### Input specifications
-1. input_path must be enclosed by double quotes "". For example: `python3 ecSeg.py -i "C:/Users/Utkrisht/path"`
-2. Software will only read the `.tif` images in the input folder
-4. Optionally, you can provide a model name using "-m" if you train a new model.
+1.  Software will only read the `.tif` images in the input folder.
+2.  FISH analysis will only consider green and red FISH
 
-Note: The "-i" flag must be provided.
+## Tasks
 
-### Output 
-1. **Coordinates folder** - Contains coordinate files for each image. Each coordinate file will have the coordinates of all the ecDNA present in the corresponding image in the form `(x, y)`.
-2.  **Labels folder** - Contains the RGB version of the post-processed segmentation and the raw values saved as a `.npy` file.
-3. **dapi folder** - Contains the gray-scale dapi version of the images.
-4. **num_ecDNAs.csv** - Contains a list of all the images that were processed and the number of ecDNA in each image. 
+### `make metaseg`
+
+Segment metaphase images stained with DAPI. Identified background, nuclei, chromosomes, and ecDNA.
+
+Set parameters in config.yaml under `metaseg`:
+
+`inpath : path to folder containing images`
+
+#### Output
+
+1.  **labels folder** - Contains the RGB version of the post-processed segmentation and the raw values saved as a `.npy` file.
+2. **dapi folder** - Contains the gray-scale dapi version of the images.
+3. **ec_quantifications.csv** - Contains a list of all the images that were processed and the number of ecDNA in each image. 
 
 #### Segmentation details
 
@@ -46,41 +70,38 @@ chromosome = (seg_I==2)
 ecDNA = (seg_I==3)
 ```
 
-## Run ecSeg_fish
-To analyze fish interaction run ecSef_fish.py:
-```
-python ecSeg_fish.py -i "input_path"
-```
+### `make meta_overlay`
 
-### Input specifications
+Analyze fish interaction on metaphase images stained with DAPI. Supports green and red FISH. `make metaseg` must be run before `make meta_overlay` can be executed.
 
-Arguments | Description 
----| ---|
-`-h` | Displays argument options
-`-i` | Path to folder containing images. Must be wrapped in double quotes. See example above on how to run ecSeg.py.
-`-c` | Fish color (optional). Must be 'green' or 'red'. Default color is green.
-`-t` | Threshold value (optional). Threshold values must be [0, 255]. Indicates sensitivity of FISH interaction. 0 and 255 are the least and highest sensitivity, respectively
-`-p` | Segment boolean (optional). Must be 'True' or 'False'. Indicates whether to re-segment images. Enter 'False' if you have already segmented the images
-`-m` | Model name (optional). Name of the trained model. Must have '.h5' extension.
+Set parameters in config.yaml under `meta_overlay`:
 
-### Output
-1. All the outputs from ecSeg.py. See above.
+````
+inpath : path to folder containing images
+FISH_color : FISH color
+color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
+````
+
+#### Output
+
 2. **green folder** will contain the gray-scale version of the green fish signal.
 3. **red folder** will contain the gray-scale version of red fish signal.
-4. **ec_fish.csv** will contain fish interaction stats for each image. See [ecSeg_fish_analysis](https://github.com/UCRajkumar/ecSeg/edit/master/ecSeg_fish_analysis.md). 
+3. **ecfish_quantification.csv** will contain fish interaction stats for each image. Column headers are as follows:
+    1. “image_name” - Name of image
+    2. “# of ecDNA” - # of ecDNA based on DAPI only. 
+    3. “# of ecDNA(FISH)” - # of ecDNA based on FISH only.
+    4. “# of ecDNA(DAPI) +  FISH” - # of ecDNA (based on DAPI) containing FISH signal
+    5. “# of HSR” - # of homogeneously stained regions
+
+### `make interseg`
+
+In progress…
+
 ## Training/test Dataset
-Training and test dataset (including ground truths) can be downloaded from:
+Training and test dataset for metaseg can be downloaded from:
 ```
 https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29b09f759795
 ```
-
-Dataset | Description
----|---|
-train_im| RGB patches used to train neural network 
-train_mask| ground truth for train_im patches 
-test_im|  RGB patches used to evaluate neural network 
-test_mask| ground truth for test_im patches 
-full images | full sized images used for evaluation
 
 ## Bibtex
 ```

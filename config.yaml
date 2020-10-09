@@ -1,0 +1,10 @@
+metaseg:
+        inpath :  "images"
+
+meta_overlay:
+        inpath :  "images/"
+        FISH_color : "Green"
+        color_sensitivity : 70
+
+interseg:
+        inpath : "images"
