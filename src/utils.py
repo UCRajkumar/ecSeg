@@ -12,7 +12,7 @@ def get_imgs(inpath):
     image_paths = glob.glob(os.path.join(inpath, '*.tif'))
     return image_paths
 
-def segment(model, image_path):
+def segment(model, image_path, phase):
     I = imread(image_path)
     I = pre_proc(I)
     save_img(cv2.bitwise_not(np.squeeze(I, -1)), os.path.split(image_path), 'dapi')
@@ -22,7 +22,8 @@ def segment(model, image_path):
     I = patches2im_overlap(preds, pos) #stitch image together
     I = img_as_ubyte(I) #convert to uint8
     I = np.argmax(I[:, :, :], axis=2) #flatten the channels
-    I = meta_inference(I) 
+    if(phase == 'meta'): I = meta_inference(I) 
+    if(phase == 'inter'): I = inter_inference(I)
     return I
 
 def save_img(I, path, folder):

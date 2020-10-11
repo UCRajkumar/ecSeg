@@ -34,10 +34,11 @@ def main(argv):
     image_paths = get_imgs(inpath)
 
     df = pd.DataFrame(columns = ['image name', '# of ec'])
+    print("Reading from: ", inpath)
     for i in image_paths:
         print("Processing image: ", i)
         
-        I = segment(model, i)
+        I = segment(model, i, 'meta')
         num_ecDNA = count_cc(I==3)
         cmap = colors.ListedColormap(['#386cb0', '#ffff99', '#7fc97f', '#f0027f'])
         path_split = os.path.split(i)

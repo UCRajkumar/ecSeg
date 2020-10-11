@@ -7,4 +7,4 @@ meta_overlay:
         color_sensitivity : 70
 
 interseg:
-        inpath : "images"
+        inpath : "./../interphase/data/ecDNA/green"

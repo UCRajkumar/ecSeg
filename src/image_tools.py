@@ -10,7 +10,11 @@ from matplotlib import pyplot as plt
 
 NUM_CLASSES = 4
 EC_SIZE_THRESHOLD = 15
-#post-processing
+
+def inter_inference(img):
+    print('hi')
+    return img
+
 def meta_inference(img):
     #if ecDNA is touching chromosome/nuclei, mark that whole
     #component as that class
