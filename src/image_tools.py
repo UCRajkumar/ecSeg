@@ -4,6 +4,7 @@ from skimage import measure
 from skimage.io import *
 from skimage.color import *
 from skimage.morphology import *
+from skimage.filters.rank import *
 from scipy.ndimage import label, generate_binary_structure, binary_fill_holes
 import scipy.misc
 from matplotlib import pyplot as plt
@@ -12,7 +13,7 @@ NUM_CLASSES = 4
 EC_SIZE_THRESHOLD = 15
 
 def inter_inference(img):
-    print('hi')
+    print('In progress')
     return img
 
 def meta_inference(img):
@@ -106,8 +107,7 @@ def pre_proc(img):
     #is greater than 50% of total pixels
     if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5): 
         img = ~img
-        
-    img = cv2.GaussianBlur(img,(5,5),0)
+    
     img = np.expand_dims(img, axis=-1)
     return img
 
