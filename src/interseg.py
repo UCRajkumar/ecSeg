@@ -37,7 +37,7 @@ def main(argv):
     for i in image_paths:
         print("Processing image: ", i)
         
-        I = segment(model, i, 'inter')
+        I = inter_classify(model, i)
         cmap = colors.ListedColormap(['#386cb0', '#ffff99', '#7fc97f', '#f0027f'])
         path_split = os.path.split(i)
         outpath = os.path.join(path_split[0], 'labels', path_split[1].split('.')[0])

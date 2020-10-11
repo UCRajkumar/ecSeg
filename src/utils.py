@@ -12,20 +12,27 @@ def get_imgs(inpath):
     image_paths = glob.glob(os.path.join(inpath, '*.tif'))
     return image_paths
 
-def segment(model, image_path, phase):
+def meta_segment(model, image_path):
     I = imread(image_path)
     I = pre_proc(I)
-    save_img(cv2.bitwise_not(np.squeeze(I, -1)), os.path.split(image_path), 'dapi')
-    I, patches, pos = im2patches_overlap(I) #crop into patches
+    save_img(cv2.bitwise_not(I), os.path.split(image_path), 'dapi')
+    I, patches, pos = im2patches_overlap(np.expand_dims(I, axis=-1)) #crop into patches
     #patches = [np.expand_dims(x, -1) for x in patches] 
     preds = model.predict_on_batch(np.array(patches)) #predict on patches
     I = patches2im_overlap(preds, pos) #stitch image together
     I = img_as_ubyte(I) #convert to uint8
     I = np.argmax(I[:, :, :], axis=2) #flatten the channels
-    if(phase == 'meta'): I = meta_inference(I) 
-    if(phase == 'inter'): I = inter_inference(I)
+    I = meta_inference(I) 
     return I
 
+def inter_classify(model, image_path):
+    I = imread(image_path)
+    I = pre_proc(I)
+    save_img(cv2.bitwise_not(I), os.path.split(image_path), 'dapi')
+    # I = nuclei_segment()
+    # nucleic_regions = label(I_segment)
+
+    return classification
 def save_img(I, path, folder):
     cv2.imwrite(os.path.join(path[0], folder, path[1]), I)
 

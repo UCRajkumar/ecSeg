@@ -38,7 +38,7 @@ def main(argv):
     for i in image_paths:
         print("Processing image: ", i)
         
-        I = segment(model, i, 'meta')
+        I = meta_segment(model, i)
         num_ecDNA = count_cc(I==3)
         cmap = colors.ListedColormap(['#386cb0', '#ffff99', '#7fc97f', '#f0027f'])
         path_split = os.path.split(i)

@@ -107,8 +107,15 @@ def pre_proc(img):
     #is greater than 50% of total pixels
     if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5): 
         img = ~img
-    
-    img = np.expand_dims(img, axis=-1)
+
+    return img
+
+def nuclei_segment(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.GaussianBlur(img,(9, 9),0)
+    img = median(img, disk(30))
+    _,th3 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) 
+    th3 = remove_small_objects(th3.astype('bool'), 3000)
     return img
 
 def split_FISH_channels(image_path, fish_color, sensitivity):

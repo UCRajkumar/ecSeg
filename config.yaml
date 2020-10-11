@@ -7,4 +7,4 @@ meta_overlay:
         color_sensitivity : 70
 
 interseg:
-        inpath : "./../Interphase2/HSR/green"
+        inpath : "./../Interphase2/ecDNA/green"
