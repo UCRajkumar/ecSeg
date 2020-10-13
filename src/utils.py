@@ -1,6 +1,10 @@
-import os, glob, cv2
+import os, glob, cv2, math, scipy
 from skimage.io import *
 from image_tools import *
+from skimage.measure import label, regionprops
+from skimage.morphology import *
+from skimage.filters.rank import *
+from skimage.transform import resize
 from skimage import img_as_ubyte
 
 HSR_SIZE_THRESHOLD = 20
@@ -25,13 +29,27 @@ def meta_segment(model, image_path):
     I = meta_inference(I) 
     return I
 
-def inter_classify(model, image_path):
+def inter_classify(model, image_path, CELL_THRESHOLD):
     I = imread(image_path)
     I = pre_proc(I)
-    save_img(cv2.bitwise_not(I), os.path.split(image_path), 'dapi')
-    # I = nuclei_segment()
-    # nucleic_regions = label(I_segment)
-
+    _, _, chrom, ec = read_seg(image_path)
+    I_segment = nuclei_segment(I, chrom, ec)
+    nucleic_regions = label(I_segment)
+    region_props = regionprops(nucleic_regions)
+    nuclei = []
+    for region in region_props: #The first unique value is 0, which is just background
+        mask = (nucleic_regions == region.label)
+        temp = I.copy()
+        temp[~mask] = 0
+        
+        bb = region.bbox
+        h = bb[2] - bb[0]; w = bb[3] - bb[1]
+        
+        nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w)), [i[1]['fish'], 2]]
+        nuclei.append(resize(nuclei, (256, 256), preserve_range=True));
+    nuclei = np.array(nuclei)
+    prediction_scores = model.predict(nuclei)
+    classification = scipy.stats.mode(prediction_scores > CELL_THRESHOLD)[0][0][0]
     return classification
 def save_img(I, path, folder):
     cv2.imwrite(os.path.join(path[0], folder, path[1]), I)

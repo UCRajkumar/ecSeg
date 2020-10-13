@@ -110,13 +110,15 @@ def pre_proc(img):
 
     return img
 
-def nuclei_segment(img):
+def nuclei_segment(img, chrom, ec):
+    img[chrom] = 0
+    img[ec] = 0
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.GaussianBlur(img,(9, 9),0)
     img = median(img, disk(30))
     _,th3 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) 
     th3 = remove_small_objects(th3.astype('bool'), 3000)
-    return img
+    return th3
 
 def split_FISH_channels(image_path, fish_color, sensitivity):
     path_split = os.path.split(image_path)

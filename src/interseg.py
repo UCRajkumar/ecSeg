@@ -7,7 +7,9 @@ from utils import *
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 
-MODEL_NAME = 'metaseg.h5'
+META_MODEL = 'metaseg.h5'
+INTER_MODEL = 'interseg.h5'
+CELL_THRESHOLD = 0.111
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 def main(argv):
@@ -31,21 +33,21 @@ def main(argv):
     else:
         os.mkdir(os.path.join(inpath, 'labels'))
 
-    model = load_model(MODEL_NAME)
+    meta_model = load_model(META_MODEL)
+    inter_model = load_model(INTER_MODEL)
     image_paths = get_imgs(inpath)
     print("Reading from: ", inpath)
+    print("Identifying cells...")
     for i in image_paths:
-        print("Processing image: ", i)
-        
-        I = inter_classify(model, i)
-        cmap = colors.ListedColormap(['#386cb0', '#ffff99', '#7fc97f', '#f0027f'])
+        I = meta_segment(meta_model, i)
         path_split = os.path.split(i)
         outpath = os.path.join(path_split[0], 'labels', path_split[1].split('.')[0])
-        
-        print("Saving image: ", i, " to ", outpath)
+        print("Saving segmentation of cells: ", i, " to ", outpath)
+        np.save(outpath, I)
 
-        plt.imsave(outpath + '.png', I.astype('uint8'), cmap=cmap, vmin=0, vmax=4)
-#         np.save(outpath, I)
+    print("Classifying images...")
+    for i in image_path:
+        I = inter_classify(inter_model, image_path, CELL_THRESHOLD)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

@@ -3,8 +3,9 @@ metaseg:
 
 meta_overlay:
         inpath :  "images/"
-        FISH_color : "Green"
+        FISH_color : "green"
         color_sensitivity : 70
 
 interseg:
         inpath : "./../Interphase2/ecDNA/green"
+        FISH_color : 'green'
