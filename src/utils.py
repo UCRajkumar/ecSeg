@@ -29,14 +29,16 @@ def meta_segment(model, image_path):
     I = meta_inference(I) 
     return I
 
-def inter_classify(model, image_path, CELL_THRESHOLD):
+def inter_classify(model, image_path, fish_index, CELL_THRESHOLD):
+    print(image_path)
     I = imread(image_path)
-    I = pre_proc(I)
+    if(I.dtype == 'uint16'):
+        I = cv2.convertScaleAbs(I, alpha=(255.0/65535.0))
     _, _, chrom, ec = read_seg(image_path)
     I_segment = nuclei_segment(I, chrom, ec)
     nucleic_regions = label(I_segment)
     region_props = regionprops(nucleic_regions)
-    nuclei = []
+    cells = []
     for region in region_props: #The first unique value is 0, which is just background
         mask = (nucleic_regions == region.label)
         temp = I.copy()
@@ -45,12 +47,13 @@ def inter_classify(model, image_path, CELL_THRESHOLD):
         bb = region.bbox
         h = bb[2] - bb[0]; w = bb[3] - bb[1]
         
-        nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w)), [i[1]['fish'], 2]]
-        nuclei.append(resize(nuclei, (256, 256), preserve_range=True));
-    nuclei = np.array(nuclei)
-    prediction_scores = model.predict(nuclei)
+        nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w)), [fish_index, 2]]
+        cells.append(resize(nuclei, (256, 256), preserve_range=True));
+    cells = np.array(cells)
+    prediction_scores = model.predict(cells)
     classification = scipy.stats.mode(prediction_scores > CELL_THRESHOLD)[0][0][0]
-    return classification
+    return 0 #classification
+
 def save_img(I, path, folder):
     cv2.imwrite(os.path.join(path[0], folder, path[1]), I)
 
