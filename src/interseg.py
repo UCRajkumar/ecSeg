@@ -47,7 +47,7 @@ def main(argv):
 
     print("Classifying images...")
     for i in image_path:
-        I = inter_classify(inter_model, image_path, CELL_THRESHOLD)
-
+        clasification = inter_classify(inter_model, image_path, CELL_THRESHOLD)
+        print(i, classification)
 if __name__ == "__main__":
    main(sys.argv[1:])
