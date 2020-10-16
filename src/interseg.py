@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 
 META_MODEL = 'metaseg.h5'
 INTER_MODEL = 'interseg.h5'
-CELL_THRESHOLD = 0.111
+CELL_THRESHOLD = 0.5
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 def main(argv):

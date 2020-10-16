@@ -13,7 +13,7 @@ NUM_CLASSES = 4
 EC_SIZE_THRESHOLD = 15
 
 def inter_inference(img):
-    print('In progress')
+    print('Post-processing...')
     return img
 
 def meta_inference(img):
@@ -94,10 +94,14 @@ def meta_inference(img):
     img[binary_dilation(img == 3, diamond(1))] = 3
     return img
 
-def pre_proc(img):
-
+def u16_to_u8(img):
     if(img.dtype == 'uint16'):
         img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
+    return img
+
+def meta_preprocess(img):
+
+    img = u16_to_u8(img)
 
     if(len(img.shape) > 2):
         img = img[:,:,2]
@@ -117,7 +121,7 @@ def nuclei_segment(img, chrom, ec):
     img = cv2.GaussianBlur(img,(9, 9),0)
     img = median(img, disk(30))
     _,th3 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) 
-    th3 = remove_small_objects(th3.astype('bool'), 3000)
+    th3 = remove_small_objects(th3.astype('bool'), 3000) #these components are most likely micronuclei
     return th3
 
 def split_FISH_channels(image_path, fish_color, sensitivity):

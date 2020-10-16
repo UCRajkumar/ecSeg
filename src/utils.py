@@ -18,7 +18,7 @@ def get_imgs(inpath):
 
 def meta_segment(model, image_path):
     I = imread(image_path)
-    I = pre_proc(I)
+    I = meta_preprocess(I)
     save_img(cv2.bitwise_not(I), os.path.split(image_path), 'dapi')
     I, patches, pos = im2patches_overlap(np.expand_dims(I, axis=-1)) #crop into patches
     #patches = [np.expand_dims(x, -1) for x in patches] 
@@ -30,10 +30,24 @@ def meta_segment(model, image_path):
     return I
 
 def inter_classify(model, image_path, fish_index, CELL_THRESHOLD):
-    print(image_path)
-    I = imread(image_path)
-    if(I.dtype == 'uint16'):
-        I = cv2.convertScaleAbs(I, alpha=(255.0/65535.0))
+    def split_nuclei_segments(img, overlap = 75, scw = 256): 
+        h, w = img.shape[:2]; patches = []
+        for i in range(0, math.ceil(h/scw)):
+            min_row = i*scw
+            if(h < 256): max_row = h
+            else:
+                max_row = min_row + scw
+                if(max_row > h): continue
+            for j in range(0, math.ceil(w/scw)):
+                min_col = j*scw
+                if(w < 256): max_col = w
+                else:
+                    max_col = min_col + scw
+                    if(max_col > w): continue
+                patches.append(resize(img[min_row:max_row, min_col:max_col, :], (256, 256), preserve_range=True))
+        return patches
+        
+    I = u16_to_u8(imread(image_path))
     _, _, chrom, ec = read_seg(image_path)
     I_segment = nuclei_segment(I, chrom, ec)
     nucleic_regions = label(I_segment)
@@ -47,12 +61,17 @@ def inter_classify(model, image_path, fish_index, CELL_THRESHOLD):
         bb = region.bbox
         h = bb[2] - bb[0]; w = bb[3] - bb[1]
         
-        nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w)), [fish_index, 2]]
-        cells.append(resize(nuclei, (256, 256), preserve_range=True));
+        if((h <= 256) & (w <= 256)):
+            nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w)), [fish_index, 2]]
+            cells.append(resize(nuclei, (256, 256), preserve_range=True))
+        else:
+            nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w), [fish_index, 2]]
+            patches = im2patches_overlap(nuclei)
+            for p in patches: cells.append(p)
     cells = np.array(cells)
-    prediction_scores = model.predict(cells)
-    classification = scipy.stats.mode(prediction_scores > CELL_THRESHOLD)[0][0][0]
-    return 0 #classification
+    prediction_scores = model.predict(cells) > CELL_THRESHOLD
+    classification = np.sum(prediction_scores)/len(prediction_scores) > 0.5
+    return classification
 
 def save_img(I, path, folder):
     cv2.imwrite(os.path.join(path[0], folder, path[1]), I)
