@@ -97,11 +97,6 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 
 In progress…
 
-## Training/test Dataset
-Training and test dataset for metaseg can be downloaded from:
-```
-https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29b09f759795
-```
 
 ## Bibtex
 ```
