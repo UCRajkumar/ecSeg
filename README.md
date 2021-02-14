@@ -28,10 +28,10 @@ This platform requires a modern processor with support for AVX instructions, pyt
 ```
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
-make setup
+make
 ```
 
-Activate the ecSeg environment before executing any tasks:
+Always make sure the `ecseg` environment is activated before executing any tasks:
 
 ```
 conda activate ecseg

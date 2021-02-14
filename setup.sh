@@ -1,5 +1,5 @@
 echo "Installing required libraries"
-conda create --name ecseg --file requirements.txt
+conda env create -f env.yml
 conda activate ecseg
 
 echo "Successfully setup ecseg"
