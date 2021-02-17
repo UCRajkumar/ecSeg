@@ -16,6 +16,7 @@ def main(argv):
     var = yaml.load(config, Loader=yaml.FullLoader)['meta_overlay']
     inpath = var['inpath']
     fish_color = var['FISH_color'].lower()
+    two_fish_bool = eval(var['two_fish_bool'])
     sensitivity = var['color_sensitivity']
     
     #check input parameters
@@ -37,7 +38,7 @@ def main(argv):
         if((fish_color != 'green') & (fish_color != 'red')):
             print("FISH_color can only be \"green\" or \"red\". Please update the config.yaml file accordingly.")
             sys.exit(2)
-        
+     
 
     if(os.path.exists(os.path.join(inpath, 'red'))):
         pass
@@ -51,15 +52,18 @@ def main(argv):
 
     image_paths = get_imgs(inpath)
 
-    df = pd.DataFrame(columns=['image_name', 
-    '# of ecDNA(DAPI)', 
-    '# of ecDNA(FISH)', 
-    '# of ecDNA(DAPI) + FISH', 
-    '# of HSR'])
+    df = pd.DataFrame()
+
+    if(two_fish_bool):
+        if(fish_color == 'green'):
+            second_fish == 'red'
+        else:
+            second_fish = 'green'
 
     for i in image_paths:
         path_split = os.path.split(i)
         print("Processing image: ", i)
+        
         
         fish = split_FISH_channels(i, fish_color, sensitivity)
         if(isinstance(fish, np.ndarray) == False):
@@ -73,14 +77,36 @@ def main(argv):
         num_ecDNA_FISH = count_EC_FISH(ec, fish) # compute # of ecDNA (DAPI) colocated with FISH
         num_HSR = count_HSR(chrom, fish) # compute # of FISH on a chromosome
         
-        df = df.append({'image_name': path_split[1], 
-        '# of ecDNA(DAPI)' : num_ecDNA, 
-        '# of ecDNA(DAPI) + FISH' : num_ecDNA_FISH, 
-        '# of ecDNA(FISH)': num_FISH,
-        '# of HSR': num_HSR}, 
-        ignore_index=True)
+        if(two_fish_bool):
+            fish = split_FISH_channels(i, second_fish, sensitivity)
+            if(isinstance(fish, np.ndarray) == False):
+                continue
+            
+            fish = fish * ~nuclei #discard fish pixels in nucleic regions 
+            num_FISH2 = count_cc(fish * ~chrom) 
+            num_ecDNA_FISH2 = count_EC_FISH(ec, fish) 
+            num_HSR2 = count_HSR(chrom, fish) 
 
-    df.to_csv(os.path.join(path_split[0], 'ecfish_quantification.csv'), index=False)
+            df = df.append({'image_name': path_split[1], 
+            '# of ecDNA (DAPI)' : num_ecDNA, 
+            '# of ecDNA (DAPI and ' + fish_color +  ')' : num_ecDNA_FISH, 
+            '# of ecDNA ('+ fish_color +  ')': num_FISH,
+            '# of HSR (' + fish_color + ')': num_HSR,
+            '# of ecDNA (DAPI and ' + second_fish +  ')' : num_ecDNA_FISH2, 
+            '# of ecDNA ('+ second_fish +  ')': num_FISH2,
+            '# of HSR (' + second_fish + ')': num_HSR2}, 
+            ignore_index=True)
+            
+        else:
+            df = df.append({'image_name': path_split[1], 
+            '# of ecDNA (DAPI)' : num_ecDNA, 
+            '# of ecDNA (DAPI and ' + fish_color +  ')' : num_ecDNA_FISH, 
+            '# of ecDNA ('+ fish_color +  ')': num_FISH,
+            '# of HSR (' + fish_color + ')': num_HSR}, 
+            ignore_index=True)
+            
+
+    df.to_csv(os.path.join(path_split[0], 'fish_quantification.csv'), index=False)
 
 if __name__ == "__main__":
    main(sys.argv[1:])

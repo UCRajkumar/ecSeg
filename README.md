@@ -79,6 +79,7 @@ Set parameters in config.yaml under `meta_overlay`:
 ````
 inpath : path to folder containing images
 FISH_color : FISH color
+two_fish_bool : True/False
 color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
 ````
 
@@ -89,9 +90,9 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 3. **ecfish_quantification.csv** will contain fish interaction stats for each image. Column headers are as follows:
     1. “image_name” - Name of image
     2. “# of ecDNA” - # of ecDNA based on DAPI only. 
-    3. “# of ecDNA(FISH)” - # of ecDNA based on FISH only.
-    4. “# of ecDNA(DAPI) +  FISH” - # of ecDNA (based on DAPI) containing FISH signal
-    5. “# of HSR” - # of homogeneously stained regions
+    3. “# of ecDNA (FISH_color)” - # of ecDNA based on that FISH color only.
+    4. “# of ecDNA(DAPI and  FISH_color)” - # of ecDNA based on DAPI colocated with that FISH_color
+    5. “# of HSR (FISH)” - # of homogeneously stained regions based on FISH_color.
 
 ### `make interseg`
 
