@@ -94,6 +94,8 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
     4. “# of ecDNA(DAPI and  FISH_color)” - # of ecDNA based on DAPI colocated with that FISH_color
     5. “# of HSR (FISH)” - # of homogeneously stained regions based on FISH_color.
 
+If two fish boolean is set to True, then more columns will be headed. 
+
 ### `make interseg`
 
 In progress…
