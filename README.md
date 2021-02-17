@@ -1,6 +1,6 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-This repository is the official version of ecSeg, a tool used to quantify ecDNA in metaphase images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following reference if using ecSeg in your work: 
+This repository is the official version of ecSeg, a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following reference if using ecSeg in your work: 
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
@@ -28,10 +28,10 @@ This platform requires a modern processor with support for AVX instructions, pyt
 ```
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
-make setup
+make
 ```
 
-Activate the ecSeg environment before executing any tasks:
+Always make sure the `ecseg` environment is activated before executing any tasks:
 
 ```
 conda activate ecseg
@@ -98,11 +98,6 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 
 In progress…
 
-## Training/test Dataset
-Training and test dataset for metaseg can be downloaded from:
-```
-https://data.mendeley.com/datasets/m7n3zvg539/draft?a=30ace699-6d6a-4c49-a770-29b09f759795
-```
 
 ## Bibtex
 ```
