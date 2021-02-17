@@ -124,7 +124,7 @@ def nuclei_segment(img, chrom, ec):
     th3 = remove_small_objects(th3.astype('bool'), 3000) #these components are most likely micronuclei
     return th3
 
-def split_FISH_channels(image_path, fish_color, sensitivity):
+def split_FISH_channels(image_path, sensitivity):
     path_split = os.path.split(image_path)
     I = imread(image_path)
     if(len(I.shape)<3):
@@ -137,11 +137,7 @@ def split_FISH_channels(image_path, fish_color, sensitivity):
     cv2.imwrite(os.path.join(path_split[0], 'red', path_split[1] + '.png'), cv2.bitwise_not(np.uint8(I[...,0])))
     cv2.imwrite(os.path.join(path_split[0], 'green', path_split[1] + '.png'), cv2.bitwise_not(np.uint8(I[...,1])))
 
-    if('green' in fish_color):
-        fish = (np.array(I[...,1]) > sensitivity)
-    else:
-        fish = (np.array(I[...,0]) > sensitivity)
-    return fish
+    return (np.array(I[...,0]) > sensitivity), (np.array(I[...,1]) > sensitivity)
 
 def im2patches_overlap(img, overlap_value=25, scw=256): #See https://github.com/neuropoly/axondeepseg
     '''

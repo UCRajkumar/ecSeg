@@ -64,8 +64,14 @@ def main(argv):
         path_split = os.path.split(i)
         print("Processing image: ", i)
         
-        
-        fish = split_FISH_channels(i, fish_color, sensitivity)
+        red, green = split_FISH_channels(i, sensitivity)
+        if(fish_color == 'green'):
+            fish = green
+            fish2 = red
+        else:
+            fish = red
+            fish2 = green
+
         if(isinstance(fish, np.ndarray) == False):
             continue
 
@@ -78,24 +84,32 @@ def main(argv):
         num_HSR = count_HSR(chrom, fish) # compute # of FISH on a chromosome
         
         if(two_fish_bool):
-            fish = split_FISH_channels(i, second_fish, sensitivity)
-            if(isinstance(fish, np.ndarray) == False):
+            if(isinstance(fish2, np.ndarray) == False):
                 continue
             
-            fish = fish * ~nuclei #discard fish pixels in nucleic regions 
-            num_FISH2 = count_cc(fish * ~chrom) 
-            num_ecDNA_FISH2 = count_EC_FISH(ec, fish) 
-            num_HSR2 = count_HSR(chrom, fish) 
+            fish2 = fish2 * ~nuclei #discard fish pixels in nucleic regions 
+            num_FISH2 = count_cc(fish2 * ~chrom)
+            num_FISH_FISH2 = count_cc(fish * fish2 * ~chrom)
+            num_ecDNA_FISH2 = count_EC_FISH(ec, fish2)
+            num_ecDNA_FISH_FISH2 = count_EC_FISH(ec, fish2*fish) 
+            num_HSR2 = count_HSR(chrom, fish2) 
 
             df = df.append({'image_name': path_split[1], 
             '# of ecDNA (DAPI)' : num_ecDNA, 
             '# of ecDNA (DAPI and ' + fish_color +  ')' : num_ecDNA_FISH, 
             '# of ecDNA ('+ fish_color +  ')': num_FISH,
             '# of HSR (' + fish_color + ')': num_HSR,
-            '# of ecDNA (DAPI and ' + second_fish +  ')' : num_ecDNA_FISH2, 
+            '# of ecDNA (DAPI and ' + second_fish +  ')' : num_ecDNA_FISH2,
+            '# of ecDNA (DAPI and ' + second_fish +  ' and ' + fish_color + ')' : num_ecDNA_FISH_FISH2, 
+            '# of ecDNA (' + second_fish +  ' and ' + fish_color + ')' : num_FISH_FISH2, 
             '# of ecDNA ('+ second_fish +  ')': num_FISH2,
             '# of HSR (' + second_fish + ')': num_HSR2}, 
             ignore_index=True)
+
+            #rearrange columns
+            df = df[['image_name', '# of ecDNA (DAPI)', '# of ecDNA ('+ fish_color +  ')', '# of ecDNA ('+ second_fish +  ')',
+            '# of ecDNA (DAPI and ' + fish_color +  ')', '# of ecDNA (DAPI and ' + second_fish +  ')', '# of ecDNA (' + second_fish +  ' and ' + fish_color + ')', 
+            '# of ecDNA (DAPI and ' + second_fish +  ' and ' + fish_color + ')', '# of HSR (' + second_fish + ')', '# of HSR (' + fish_color + ')']]
             
         else:
             df = df.append({'image_name': path_split[1], 
@@ -104,6 +118,8 @@ def main(argv):
             '# of ecDNA ('+ fish_color +  ')': num_FISH,
             '# of HSR (' + fish_color + ')': num_HSR}, 
             ignore_index=True)
+
+            df = df[['image_name', '# of ecDNA (DAPI)', '# of ecDNA ('+ fish_color +  ')', '# of ecDNA (DAPI and ' + fish_color +  ')', '# of HSR (' + fish_color + ')']]
             
 
     df.to_csv(os.path.join(path_split[0], 'fish_quantification.csv'), index=False)
