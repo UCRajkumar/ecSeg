@@ -80,7 +80,7 @@ def main(argv):
 
         num_ecDNA = count_cc(ec) #compute # of ecDNA based on DAPI
         num_FISH = count_cc(fish * ~chrom) # Compute # of ec based on only fish
-        num_ecDNA_FISH = count_EC_FISH(ec, fish) # compute # of ecDNA (DAPI) colocated with FISH
+        num_ecDNA_FISH = count_colocalization(ec, fish) # compute # of ecDNA (DAPI) colocated with FISH
         num_HSR = count_HSR(chrom, fish) # compute # of FISH on a chromosome
         
         if(two_fish_bool):
@@ -89,9 +89,9 @@ def main(argv):
             
             fish2 = fish2 * ~nuclei #discard fish pixels in nucleic regions 
             num_FISH2 = count_cc(fish2 * ~chrom)
-            num_FISH_FISH2 = count_cc(fish * fish2 * ~chrom)
-            num_ecDNA_FISH2 = count_EC_FISH(ec, fish2)
-            num_ecDNA_FISH_FISH2 = count_EC_FISH(ec, fish2*fish) 
+            num_FISH_FISH2 = count_colocalization(fish*~chrom, fish2 * ~chrom)
+            num_ecDNA_FISH2 = count_colocalization(ec, fish2)
+            num_ecDNA_FISH_FISH2 = count_colocalization(ec, fish2*fish) 
             num_HSR2 = count_HSR(chrom, fish2) 
 
             df = df.append({'image_name': path_split[1], 

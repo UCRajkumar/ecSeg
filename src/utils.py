@@ -80,15 +80,15 @@ def count_cc(I):
     numcc = measure.label(I, return_num = True) #compute number of ecDNA
     return numcc[1]
 
-def count_EC_FISH(ec, fish):
-    ec_regs = measure.label(ec)
-    num_ec_fish = 0
-    for r in np.unique(ec_regs)[1:]:
-        mask = (ec_regs == r)
-        temp = mask*fish
+def count_colocalization(ob1, ob2):
+    regs = measure.label(ob1)
+    num_coloc = 0
+    for r in np.unique(regs)[1:]:
+        mask = (regs == r)
+        temp = mask*ob2
         if(np.sum(temp) >= 1):
-            num_ec_fish += 1
-    return num_ec_fish
+            num_coloc += 1
+    return num_coloc
 
 def count_HSR(chrom, fish):
     fish = remove_small_objects(fish, HSR_SIZE_THRESHOLD)
