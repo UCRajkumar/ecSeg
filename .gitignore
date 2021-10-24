@@ -1,0 +1,4 @@
+images/*
+src/_pycache_
+models/*
+.DS_*

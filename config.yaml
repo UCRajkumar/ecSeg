@@ -1,0 +1,12 @@
+metaseg:
+        inpath :  "images/snu16"
+
+meta_overlay:
+        inpath :  "snu16"
+        FISH_color : "red"
+        two_fish_bool : "True"
+        color_sensitivity : 85
+
+interseg:
+        inpath : "../data/cytogenetics/Interphase/ecDNA/red/"
+        FISH_color : 0
