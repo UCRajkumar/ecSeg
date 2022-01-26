@@ -77,8 +77,11 @@ def save_img(I, path, folder):
     cv2.imwrite(os.path.join(path[0], folder, path[1]), I)
 
 def count_cc(I):
-    numcc = measure.label(I, return_num = True) #compute number of ecDNA
-    return numcc[1]
+    numcc = measure.label(I, return_num = True) #compute number of ecDNA    
+    sizes = []
+    for i in np.unique(numcc[0])[1:]:
+        sizes.append(np.sum(numcc[0] == i))
+    return numcc[1], np.sum(sizes)
 
 def count_colocalization(ob1, ob2):
     regs = measure.label(ob1)

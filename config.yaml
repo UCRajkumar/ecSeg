@@ -1,5 +1,5 @@
 metaseg:
-        inpath :  "images/snu16"
+        inpath :  "images"
 
 meta_overlay:
         inpath :  "snu16"
@@ -7,6 +7,7 @@ meta_overlay:
         two_fish_bool : "True"
         color_sensitivity : 85
 
-interseg:
-        inpath : "../data/cytogenetics/Interphase/ecDNA/red/"
-        FISH_color : 0
+nuclei_fish:
+        inpath :  "images"
+        FISH_color : "red"
+        color_sensitivity : 85

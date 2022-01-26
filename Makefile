@@ -9,6 +9,9 @@ metaseg:
 meta_overlay:
 	python src/meta_overlay.py
 
+nuclei_fish:
+	python src/nuclei_fish.py
+
 interseg:
 	python src/interseg.py
 
