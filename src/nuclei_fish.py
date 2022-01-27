@@ -77,21 +77,36 @@ def main(argv):
         local_max_mask = np.zeros(distance.shape, dtype=bool)
         local_max_mask[tuple(local_max_coords.T)] = True
         markers = measure.label(local_max_mask)
-
+        
         segmented_cells = segmentation.watershed(-distance, markers, mask=nuclei)
         fish_sizes = []
         cell_sizes = []
         df = pd.DataFrame()
-        for i in np.unique(segmented_cells)[1:]:
-            cell = segmented_cells==i
+        
+        for j in np.unique(segmented_cells)[1:]:
+            cell = segmented_cells==j
             fish_sizes.append(count_cc(fish*cell)[1])
             cell_sizes.append(np.sum(cell==1))
-            # ax.imshow(cell)
-            # plt.show()
+            fig, ax = plt.subplots(figsize=(5, 5))
+            print(fish_sizes[-1], cell_sizes[-1])
+            ax.imshow(cell)
+            plt.show()
         df['# of fish pixels'] = fish_sizes
         df['# of pixels in nucleus'] = cell_sizes
         df['image'] = path_split[1]
         dfs.append(df)
+
+        # fig, ax = plt.subplots(ncols=3, figsize=(15, 7))
+        # ax[0].imshow(imread(i)[:,:,-1], cmap='gray')
+        # ax[0].set_title('DAPI')
+        # ax[0].axis('off')
+        # ax[1].imshow(nuclei, cmap='gray')
+        # ax[1].set_title('ecSeg prediction')
+        # ax[1].axis('off')
+        # ax[2].imshow(color.label2rgb(segmented_cells, bg_label=0))
+        # ax[2].set_title('Prediction post-process')
+        # ax[2].axis('off')
+        # plt.show()
 
     df = pd.concat(dfs)
     df.to_csv(os.path.join(path_split[0],  'nuclei_fish.csv'), index=False)

@@ -96,10 +96,24 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 
 If two fish boolean is set to True, then more columns will be headed. 
 
-### `make interseg`
+### `make nuclei_fish`
 
-In progress…
+Identifies each nuclei in the image and analyzes ratio of fish pixels to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. `make metaseg` must be run before `make nuclei_fish` can be executed.
 
+Set parameters in config.yaml under `meta_overlay`:
+
+````
+inpath : path to folder containing images
+FISH_color : FISH color
+color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
+````
+
+#### Output
+
+1. **nuclei_fish.csv** - Each row represents a single nucleus. Column headers are as follows:
+    1. “image_name” - Name of image
+    2. “# of fish pixels" - # of ecDNA based on DAPI only. 
+    3. “# of nuclei pixels” - # of ecDNA based on that FISH color only.
 
 ## Bibtex
 ```
