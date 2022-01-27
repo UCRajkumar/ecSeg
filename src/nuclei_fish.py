@@ -91,9 +91,10 @@ def main(argv):
             # print(fish_sizes[-1], cell_sizes[-1])
             # ax.imshow(cell)
             # plt.show()
-        df['# of fish pixels'] = fish_sizes
-        df['# of pixels in nucleus'] = cell_sizes
         df['image'] = path_split[1]
+        df['# of fish pixels'] = fish_sizes
+        df['# of nuclei pixels'] = cell_sizes
+        
         dfs.append(df)
 
         # fig, ax = plt.subplots(ncols=3, figsize=(15, 7))

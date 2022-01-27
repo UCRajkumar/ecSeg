@@ -8,6 +8,6 @@ meta_overlay:
         color_sensitivity : 85
 
 nuclei_fish:
-        inpath :  "images"
+        inpath :  "images2"
         FISH_color : "red"
         color_sensitivity : 85
