@@ -87,10 +87,10 @@ def main(argv):
             cell = segmented_cells==j
             fish_sizes.append(count_cc(fish*cell)[1])
             cell_sizes.append(np.sum(cell==1))
-            fig, ax = plt.subplots(figsize=(5, 5))
-            print(fish_sizes[-1], cell_sizes[-1])
-            ax.imshow(cell)
-            plt.show()
+            # fig, ax = plt.subplots(figsize=(5, 5))
+            # print(fish_sizes[-1], cell_sizes[-1])
+            # ax.imshow(cell)
+            # plt.show()
         df['# of fish pixels'] = fish_sizes
         df['# of pixels in nucleus'] = cell_sizes
         df['image'] = path_split[1]
