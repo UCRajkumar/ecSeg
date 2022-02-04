@@ -12,10 +12,6 @@ from matplotlib import pyplot as plt
 NUM_CLASSES = 4
 EC_SIZE_THRESHOLD = 15
 
-def inter_inference(img):
-    print('Post-processing...')
-    return img
-
 def meta_inference(img):
     #if ecDNA is touching chromosome/nuclei, mark that whole
     #component as that class
@@ -114,26 +110,23 @@ def meta_preprocess(img):
 
     return img
 
-def nuclei_segment(img, chrom, ec):
-    img[chrom] = 0
-    img[ec] = 0
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.GaussianBlur(img,(9, 9),0)
-    img = median(img, disk(30))
-    _,th3 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) 
-    th3 = remove_small_objects(th3.astype('bool'), 3000) #these components are most likely micronuclei
-    return th3
+# def nuclei_segment(img, chrom, ec):
+#     img[chrom] = 0
+#     img[ec] = 0
+#     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#     img = cv2.GaussianBlur(img,(9, 9),0)
+#     img = median(img, disk(30))
+#     _,th3 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) 
+#     th3 = remove_small_objects(th3.astype('bool'), 3000) #these components are most likely micronuclei
+#     return th3
 
-def split_FISH_channels(image_path, sensitivity):
+def split_FISH_channels(I, image_path, sensitivity):
     path_split = os.path.split(image_path)
-    I = imread(image_path)
     if(len(I.shape)<3):
         print(image_path, " isn't an RGB image. Therefore, no FISH signals could be identified. Skipping...")
         return 0
     
-    if(I.dtype == 'uint16'):
-        I = cv2.convertScaleAbs(I, alpha=(255.0/65535.0))
-
+    I = u16_to_u8(I)
     cv2.imwrite(os.path.join(path_split[0], 'red', path_split[1] + '.png'), cv2.bitwise_not(np.uint8(I[...,0])))
     cv2.imwrite(os.path.join(path_split[0], 'green', path_split[1] + '.png'), cv2.bitwise_not(np.uint8(I[...,1])))
 

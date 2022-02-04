@@ -63,8 +63,8 @@ def main(argv):
     for i in image_paths:
         path_split = os.path.split(i)
         print("Processing image: ", i)
-        
-        red, green = split_FISH_channels(i, sensitivity)
+        I = imread(i)
+        red, green = split_FISH_channels(I, i, sensitivity)
         if(fish_color == 'green'):
             fish = green
             fish2 = red

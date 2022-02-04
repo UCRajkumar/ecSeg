@@ -8,6 +8,9 @@ meta_overlay:
         color_sensitivity : 85
 
 nuclei_fish:
-        inpath :  "images2"
+        inpath :  "tif"
         FISH_color : "red"
         color_sensitivity : 85
+        min_score : 0.95
+        nms_threshold : 0.15
+        scale_ratio : 1.0
