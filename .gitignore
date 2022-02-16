@@ -1,6 +1,6 @@
 images/*
-src/_pycache_
-src/nuset_utils/_pycache_
-src/model_layers/_pycache_
+src/__pycache__
+src/nuset_utils/__pycache__
+src/model_layers/__pycache__
 models/*
 .DS_*
