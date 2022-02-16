@@ -98,7 +98,18 @@ If two fish boolean is set to True, then more columns will be headed.
 
 ### `make nuclei_fish`
 
-Identifies each nuclei in the image and analyzes ratio of fish pixels to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. `make metaseg` must be run before `make nuclei_fish` can be executed.
+Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. To run `nuclei_fish`, download the Nuset weights, unzip the folder, and place it inside the models folder. 
+
+ecseg
+|
+|--models
+|--|  metaseg.h5
+|  |--nuset
+|     |  foreground.ckpt.data-00000-of-00001
+|     |  foreground.ckpt.index
+|     |  ...
+|--src
+|  |  ...
 
 Set parameters in config.yaml under `meta_overlay`:
 
@@ -106,14 +117,18 @@ Set parameters in config.yaml under `meta_overlay`:
 inpath : path to folder containing images
 FISH_color : FISH color
 color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
+min_score : 0.95
+nms_threshold : Threshold to suppress oversegmentation. (Recommendation: Leave to default value.)
+scale_ratio : Ratio of how big the cells are to the image size. (For non-tissue images, use a scale ratio of 0.4)
 ````
 
 #### Output
 
 1. **nuclei_fish.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
-    2. “# of fish pixels" - # of ecDNA based on DAPI only. 
-    3. “# of nuclei pixels” - # of ecDNA based on that FISH color only.
+    2. “nuclei center” - Center of each nuclei
+    3. “# of fish pixels" - # of ecDNA based on DAPI only. 
+    4. “# of nuclei pixels” - # of ecDNA based on that FISH color only.
 
 ## Bibtex
 ```
