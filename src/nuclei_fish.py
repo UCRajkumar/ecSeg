@@ -153,10 +153,15 @@ def main(argv):
                 cell_sizes.append(np.sum(cell==1))
                 center = region.centroid
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
+
             df['nucleus center'] = centroids
+            df['image name'] = path_split[-1][:-4]
             df['# of fish pixels'] = fish_sizes
             df['# of nuclei pixels'] = cell_sizes
-            df.to_csv(os.path.join(path_split[0],  'nuclei', path_split[1][:-4]+'.csv'), index=False)
+            dfs.append(df)
+        
+        dfs = pd.concat(dfs)
+        dfs.to_csv(os.path.join(path_split[0],  'nuclei', 'nuclei_fish.csv'), index=False)
         sess1.close()
         sess2.close()
 
