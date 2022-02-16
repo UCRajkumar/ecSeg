@@ -98,7 +98,7 @@ If two fish boolean is set to True, then more columns will be headed.
 
 ### `make nuclei_fish`
 
-Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. To run `nuclei_fish`, download the Nuset weights, unzip the folder, and place it inside the models folder. 
+Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. To run `nuclei_fish`, download the [Nuset weights](https://data.mendeley.com/public-files/datasets/m7n3zvg539/files/6204cf12-eec6-47d4-abba-fb3cfd418988/file_downloaded), unzip the folder, and place it inside the models folder. 
 
 ```
 ecseg
