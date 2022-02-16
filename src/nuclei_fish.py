@@ -139,8 +139,11 @@ def main(argv):
             if(isinstance(fish, np.ndarray) == False):
                 continue
 
-            segmented_cells = nuclei_segment(blue, path_split, bbox_min_score,
-            nms_thresh, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed)
+            segmented_cells = nuclei_segment(blue, path_split, 
+            resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed)
+
+            imheight, imwidth = segmented_cells.shape
+            fish = fish[:imheight, :imwidth]
 
             segmented_cells = measure.label(segmented_cells)
             regions = measure.regionprops(segmented_cells)

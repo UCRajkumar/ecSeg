@@ -6,6 +6,7 @@ from skimage.morphology import *
 from skimage.filters.rank import *
 from skimage.transform import resize
 from skimage import img_as_ubyte
+from skimage.transform import rescale
 import tensorflow as tf
 
 from model_layers.models import UNET
@@ -130,42 +131,26 @@ def read_seg(image_path):
     ec = (seg_I==3)
     return background, nuclei, chrom, ec
 
-def nuclei_segment(image, name, bbox_min_score, nms_thresh, resize_scale, sess1, sess2,
+def nuclei_segment(image, name, resize_scale, sess1, sess2,
 pred_masks, train_initial, pred_masks_watershed):
-
     if resize_scale != 1:
         image = rescale(image, resize_scale, anti_aliasing=True)
 
-    # Clip the height and width to be 16-fold 
     imheight, imwidth = image.shape
     imheight = imheight//16*16
     imwidth = imwidth//16*16
     image = image[:imheight, :imwidth]
-
+    
     image_normalized_wn = whole_image_norm(image)
     image_normalized_wn = np.reshape(image_normalized_wn, [1,imheight,imwidth,1])
-    
+
     masks1 = sess1.run(pred_masks, feed_dict={train_initial:image_normalized_wn})
-        
-    # # Restore the foreground normalization model from the trained network
-    # saver.restore(sess, './models/nuset/foreground.ckpt')
     
-    # sess.run(tf.compat.v1.local_variables_initializer())
-
-    if resize_scale != 1:
-        image = rescale(image, resize_scale)
-    
-    # Clip the height and width to be 16-fold 
-    imheight, imwidth = image.shape
-    imheight = imheight//16*16
-    imwidth = imwidth//16*16
-    image = image[:imheight, :imwidth]
-
     # Final pass, foreground normalization to get final masks
     image_normalized_fg = foreground_norm(image, masks1)
     image_normalized_fg = np.reshape(image_normalized_fg, [1,imheight,imwidth,1])
-    masks_watershed = sess2.run(pred_masks_watershed, feed_dict={train_initial:image_normalized_fg})
 
+    masks_watershed = sess2.run(pred_masks_watershed, feed_dict={train_initial:image_normalized_fg})
     masks_watershed = clean_image(masks_watershed)
 
     # Revert the scale to original display
