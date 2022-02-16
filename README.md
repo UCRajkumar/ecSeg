@@ -100,6 +100,7 @@ If two fish boolean is set to True, then more columns will be headed.
 
 Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. To run `nuclei_fish`, download the Nuset weights, unzip the folder, and place it inside the models folder. 
 
+```
 ecseg
 |
 |--models
@@ -110,6 +111,7 @@ ecseg
 |     |  ...
 |--src
 |  |  ...
+```
 
 Set parameters in config.yaml under `meta_overlay`:
 
