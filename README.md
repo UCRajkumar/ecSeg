@@ -78,8 +78,6 @@ Set parameters in config.yaml under `meta_overlay`:
 
 ````
 inpath : path to folder containing images
-FISH_color : FISH color
-two_fish_bool : True/False
 color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
 ````
 
@@ -117,7 +115,6 @@ Set parameters in config.yaml under `meta_overlay`:
 
 ````
 inpath : path to folder containing images
-FISH_color : FISH color
 color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
 min_score : 0.95
 nms_threshold : Threshold to suppress oversegmentation. (Recommendation: Leave to default value.)
@@ -129,7 +126,7 @@ scale_ratio : Ratio of how big the cells are to the image size. (For non-tissue 
 1. **nuclei_fish.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
     2. “nuclei center” - Center of each nuclei
-    3. “# of fish pixels" - # of ecDNA based on DAPI only. 
+    3. “# of fish pixels (FISH_color)" - # of ecDNA based on DAPI only. 
     4. “# of nuclei pixels” - # of ecDNA based on that FISH color only.
 
 ## Bibtex
