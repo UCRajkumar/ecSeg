@@ -18,7 +18,7 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 | Folder | Description                        |
 | ------ | ---------------------------------- |
 | src    | Contains python scripts            |
-| models | Contains the neural network models |
+| models | Contains required models. Download models.zip from [here](https://data.mendeley.com/public-files/datasets/m7n3zvg539/files/dd0cdd8a-9763-4a82-adcd-62be932e85ad/file_downloaded) and unzip the folder inside the ecseg/ folder|
 | images | Example images to test ecSeg       |
 
 ## Installation
@@ -29,6 +29,9 @@ This platform requires a modern processor with support for AVX instructions, pyt
 git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
 conda env create -f env.yml
+conda activate ecseg
+pip install numpy==1.19.2
+pip install imagecodecs
 ```
 
 Always make sure the `ecseg` environment is activated before executing any tasks:
@@ -50,7 +53,7 @@ Segment metaphase images stained with DAPI. Identified background, nuclei, chrom
 
 Set parameters in config.yaml under `metaseg`:
 
-`inpath : path to folder containing images`
+`inpath : path to folder containing images (make sure path is incapsulated inside single quotes. e.g. `path\to\folder`)`
 
 #### Output
 
@@ -85,18 +88,17 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 
 2. **green folder** will contain the gray-scale version of the green fish signal.
 3. **red folder** will contain the gray-scale version of red fish signal.
-3. **ecfish_quantification.csv** will contain fish interaction stats for each image. Column headers are as follows:
+3. **fish_quantification.csv** will contain fish interaction stats for each image. Column headers are as follows:
     1. “image_name” - Name of image
     2. “# of ecDNA” - # of ecDNA based on DAPI only. 
     3. “# of ecDNA (FISH_color)” - # of ecDNA based on that FISH color only.
     4. “# of ecDNA(DAPI and  FISH_color)” - # of ecDNA based on DAPI colocated with that FISH_color
     5. “# of HSR (FISH)” - # of homogeneously stained regions based on FISH_color.
 
-If two fish boolean is set to True, then more columns will be headed. 
 
 ### `make nuclei_fish`
 
-Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. To run `nuclei_fish`, download the [Nuset weights](https://data.mendeley.com/public-files/datasets/m7n3zvg539/files/6204cf12-eec6-47d4-abba-fb3cfd418988/file_downloaded), unzip the folder, and place it inside the models folder. 
+Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. 
 
 ```
 ecseg
@@ -111,23 +113,25 @@ ecseg
 |  |  ...
 ```
 
-Set parameters in config.yaml under `meta_overlay`:
+Set parameters in config.yaml under `nuclei_fish`:
 
 ````
 inpath : path to folder containing images
 color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
 min_score : 0.95
-nms_threshold : Threshold to suppress oversegmentation. (Recommendation: Leave to default value.)
-scale_ratio : Ratio of how big the cells are to the image size. (For non-tissue images, use a scale ratio of 0.4)
+nms_threshold : Threshold to suppress oversegmentation. (Recommended value: 0.01)
+scale_ratio : Ratio of cell size to image size. (Recommended value: 0.4)
+nuclei_size_t : Size threshold for finding nuclei. Nuclei smaller than this value will be considered erroneous signals. Recommendation: cultured images, use 5000. For tissue use 500.
 ````
 
 #### Output
 
 1. **nuclei_fish.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
-    2. “nuclei center” - Center of each nuclei
-    3. “# of fish pixels (FISH_color)" - # of ecDNA based on DAPI only. 
-    4. “# of nuclei pixels” - # of ecDNA based on that FISH color only.
+    2. “nuclei_center” - Center of each nuclei
+    3. “#_FISH_pixels (FISH_color)" - # of FISH pixels inside nuclei
+    4. “#_FISH_blobs (FISH_color)" - # of FISH connected components. 
+    5. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
 
 ## Bibtex
 ```

@@ -24,11 +24,79 @@ warnings.filterwarnings('ignore')
 import tensorflow.python.util.deprecation as deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
-
-HSR_SIZE_THRESHOLD = 20
 def load_model(model_name):
     import tensorflow as tf
     return tf.keras.models.load_model(os.path.join('models', model_name))
+
+def load_nuset(bbox_min_score, nms_thresh, resize_scale):
+    pred_dict_final = {}
+
+    train_initial = tf.compat.v1.placeholder(dtype=tf.float32, shape=[1, None, None, 1])
+
+    input_shape = tf.shape(input=train_initial)
+    
+    input_height = input_shape[1]
+    input_width = input_shape[2]
+    im_shape = tf.cast([input_height, input_width], tf.float32)
+    
+    nb_classes = 2
+    
+    with tf.compat.v1.variable_scope('model_U-Net') as scope:
+        final_logits, feat_map = UNET(nb_classes, train_initial)
+    
+    # The final_logits has 2 channels for foreground/background softmax scores,
+    # then we get prediction with larger score for each pixel
+    pred_masks = tf.argmax(input=final_logits, axis=3)
+    pred_masks = tf.reshape(pred_masks,[input_height,input_width])
+    pred_masks = tf.cast(pred_masks, dtype=tf.float32)
+    
+    # Dynamic anchor base size calculated from median cell lengths
+    base_size = anchor_size(tf.reshape(pred_masks,[input_height,input_width]))
+    scales = np.array([ 0.5, 1, 2])
+    ratios = np.array([ 0.125, 0.25, 0.5, 1, 2, 4, 8])
+    
+    # stride is to control how sparse we want to place anchors across the image
+    # stride = 16 means to place an anchor every 16 pixels on the original image
+    stride = 16
+    
+    ref_anchors = generate_anchors_reference(base_size, ratios, scales)
+    num_ref_anchors = scales.shape[0] * ratios.shape[0]
+
+    feat_height = input_height / stride
+    feat_width = input_width / stride
+    
+    all_anchors = generate_anchors(ref_anchors, stride, [feat_height,feat_width])
+    
+    with tf.compat.v1.variable_scope('model_RPN') as scope:
+        prediction_dict = RPN(feat_map, num_ref_anchors)
+    
+    # Get the tensors from the dict
+    rpn_cls_prob = prediction_dict['rpn_cls_prob']
+    rpn_bbox_pred = prediction_dict['rpn_bbox_pred']
+    
+    proposal_prediction = RPNProposal(rpn_cls_prob, rpn_bbox_pred, all_anchors, im_shape, nms_thresh)
+    
+    pred_dict_final['all_anchors'] = tf.cast(all_anchors, tf.float32)
+    prediction_dict['proposals'] = proposal_prediction['proposals']
+    prediction_dict['scores'] = proposal_prediction['scores']
+        
+    pred_dict_final['rpn_prediction'] = prediction_dict
+    scores = pred_dict_final['rpn_prediction']['scores']
+    proposals = pred_dict_final['rpn_prediction']['proposals']
+
+    pred_masks_watershed = tf.cast(marker_watershed(scores, proposals, pred_masks, min_score = bbox_min_score), dtype=tf.float32)
+    sess1 = tf.compat.v1.Session()
+    sess1.run(tf.compat.v1.global_variables_initializer())
+    saver1 = tf.compat.v1.train.Saver()
+    saver1.restore(sess1, './models/nuset/whole_norm.ckpt')
+    sess1.run(tf.compat.v1.local_variables_initializer())
+
+    sess2 = tf.compat.v1.Session()
+    sess2.run(tf.compat.v1.global_variables_initializer())
+    saver2 = tf.compat.v1.train.Saver()
+    saver2.restore(sess2, './models/nuset/foreground.ckpt')
+    sess2.run(tf.compat.v1.local_variables_initializer())
+    return sess1, sess2, pred_masks, train_initial, pred_masks_watershed, resize_scale
 
 def get_imgs(inpath):
     image_paths = glob.glob(os.path.join(inpath, '*.tif'))
@@ -47,92 +115,19 @@ def meta_segment(model, image_path):
     I = meta_inference(I) 
     return I
 
-def inter_classify(model, image_path, fish_index, CELL_THRESHOLD):
-    def split_nuclei_segments(img, overlap = 75, scw = 256): 
-        h, w = img.shape[:2]; patches = []
-        for i in range(0, math.ceil(h/scw)):
-            min_row = i*scw
-            if(h < 256): max_row = h
-            else:
-                max_row = min_row + scw
-                if(max_row > h): continue
-            for j in range(0, math.ceil(w/scw)):
-                min_col = j*scw
-                if(w < 256): max_col = w
-                else:
-                    max_col = min_col + scw
-                    if(max_col > w): continue
-                patches.append(resize(img[min_row:max_row, min_col:max_col, :], (256, 256), preserve_range=True))
-        return patches
-        
-    I = u16_to_u8(imread(image_path))
-    _, _, chrom, ec = read_seg(image_path)
-    I_segment = nuclei_segment(I, chrom, ec)
-    nucleic_regions = label(I_segment)
-    region_props = regionprops(nucleic_regions)
-    cells = []
-    for region in region_props: #The first unique value is 0, which is just background
-        mask = (nucleic_regions == region.label)
-        temp = I.copy()
-        temp[~mask] = 0
-        
-        bb = region.bbox
-        h = bb[2] - bb[0]; w = bb[3] - bb[1]
-        
-        if((h <= 256) & (w <= 256)):
-            nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w)), [fish_index, 2]]
-            cells.append(resize(nuclei, (256, 256), preserve_range=True))
-        else:
-            nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w), [fish_index, 2]]
-            patches = im2patches_overlap(nuclei)
-            for p in patches: cells.append(p)
-    cells = np.array(cells)
-    prediction_scores = model.predict(cells) > CELL_THRESHOLD
-    classification = np.sum(prediction_scores)/len(prediction_scores) > 0.5
-    return classification
-
 def save_img(I, path, folder):
     cv2.imwrite(os.path.join(path[0], folder, path[1]), I)
 
-def count_cc(I):
-    numcc = measure.label(I, return_num = True) #compute number of ecDNA    
-    sizes = []
-    for i in np.unique(numcc[0])[1:]:
-        sizes.append(np.sum(numcc[0] == i))
-    return numcc[1], np.sum(sizes)
-
-def count_colocalization(ob1, ob2):
-    regs = measure.label(ob1)
-    num_coloc = 0
-    for r in np.unique(regs)[1:]:
-        mask = (regs == r)
-        temp = mask*ob2
-        if(np.sum(temp) >= 1):
-            num_coloc += 1
-    return num_coloc
-
-def count_HSR(chrom, fish):
-    fish = remove_small_objects(fish, HSR_SIZE_THRESHOLD)
-    chrom_regs = measure.label(chrom)
-    num_HSR = 0
-    for r in np.unique(chrom_regs)[1:]:
-        mask = (chrom_regs == r)
-        temp = mask*fish
-        if(np.sum(temp) >= 1):
-            num_HSR += 1
-    return num_HSR
-
 def read_seg(image_path):
     path_split = os.path.split(image_path)
-    seg_I = np.load(os.path.join(path_split[0], 'labels', path_split[1].split('.')[0] + '.npy'))
+    seg_I = np.load(os.path.join(path_split[0], 'labels', path_split[1][:-4] + '.npy'))
     background = (seg_I==0)
     nuclei = (seg_I==1)
     chrom = (seg_I==2)
     ec = (seg_I==3)
     return background, nuclei, chrom, ec
 
-def nuclei_segment(image, name, resize_scale, sess1, sess2,
-pred_masks, train_initial, pred_masks_watershed):
+def nuclei_segment(image, name, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, NUCLEI_SIZE_T):
     if resize_scale != 1:
         image = rescale(image, resize_scale, anti_aliasing=True)
 
@@ -158,5 +153,7 @@ pred_masks, train_initial, pred_masks_watershed):
         masks_watershed = rescale(masks_watershed, 1/resize_scale)
     
     I8 = (((masks_watershed - masks_watershed.min()) / (masks_watershed.max() - masks_watershed.min())) * 255).astype(np.uint8)
-    cv2.imwrite(os.path.join(name[0], 'nuclei',  name[1]), I8)
+    I8[I8 > 0] = 255
+    I8 = morphology.remove_small_objects(I8.astype('bool'), NUCLEI_SIZE_T).astype('int') * 255
+    save_img(I8, name, 'nuclei')
     return I8

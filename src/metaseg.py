@@ -30,7 +30,11 @@ def main(argv):
     else:
         os.mkdir(os.path.join(inpath, 'labels'))
 
-    model = load_model(MODEL_NAME)
+    strategy = tf.distribute.MirroredStrategy()
+    print(tf.config.list_physical_devices('GPU'))
+    with strategy.scope():
+        model = load_model(MODEL_NAME)
+        
     image_paths = get_imgs(inpath)
 
     df = pd.DataFrame(columns = ['image name', '# of ec'])
@@ -42,9 +46,8 @@ def main(argv):
         num_ecDNA = count_cc(I==3)[0]
         cmap = colors.ListedColormap(['#386cb0', '#ffff99', '#7fc97f', '#f0027f'])
         path_split = os.path.split(i)
-        outpath = os.path.join(path_split[0], 'labels', path_split[1].split('.')[0])
-        
-        print("Saving image: ", i, " to ", outpath)
+        outpath = os.path.join(path_split[0], 'labels', path_split[1][:-4])
+        print("Saving labels: ", i, " to ", outpath)
 
         plt.imsave(outpath + '.png', I.astype('uint8'), cmap=cmap, vmin=0, vmax=4)
         np.save(outpath, I)

@@ -58,14 +58,7 @@ def meta_inference(img):
                 img[tuple(r.coords.T)] = 0
         return img
 
-    def break_DM(img): #Break double minutes
-        temp = binary_erosion(img == 3, diamond(1)) #break bridges between connected components
-        img[img == 3] = 0 #reset ecDNA
-        img[temp == 1] = 3 #add new ecDNA
-        return img
-
     img = fill_holes(fill_holes(img, 1), 2) #fill holes
-    #img = break_DM(img)
     img = size_thresh(img)
     #dilation XOR erosion of ecDNA. Smoothens ecDNA borders by enlarging and then evenly eroding
     img[binary_dilation(img == 3, diamond(1)) ^ binary_erosion(img == 3, diamond(1))] = 0
@@ -90,15 +83,8 @@ def meta_inference(img):
     img[binary_dilation(img == 3, diamond(1))] = 3
     return img
 
-def u16_to_u8(img):
-    if(img.dtype == 'uint16'):
-        img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
-    return img
-
 def meta_preprocess(img):
-
     img = u16_to_u8(img)
-
     if(len(img.shape) > 2):
         img = img[:,:,2]
     
@@ -107,18 +93,40 @@ def meta_preprocess(img):
     #is greater than 50% of total pixels
     if(np.sum(th3)  > img.shape[0]*img.shape[1]*0.5): 
         img = ~img
-
     return img
 
-# def nuclei_segment(img, chrom, ec):
-#     img[chrom] = 0
-#     img[ec] = 0
-#     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#     img = cv2.GaussianBlur(img,(9, 9),0)
-#     img = median(img, disk(30))
-#     _,th3 = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU) 
-#     th3 = remove_small_objects(th3.astype('bool'), 3000) #these components are most likely micronuclei
-#     return th3
+def u16_to_u8(img):
+    if(img.dtype == 'uint16'):
+        img = cv2.convertScaleAbs(img, alpha=(255.0/65535.0))
+    return img
+    
+def count_HSR(chrom, fish, HSR_SIZE_THRESHOLD):
+    fish = remove_small_objects(fish, HSR_SIZE_THRESHOLD)
+    chrom_regs = measure.label(chrom)
+    num_HSR = 0
+    for r in np.unique(chrom_regs)[1:]:
+        mask = (chrom_regs == r)
+        temp = mask*fish
+        if(np.sum(temp) >= 1):
+            num_HSR += 1
+    return num_HSR
+
+def count_cc(I):
+    numcc = measure.label(I, return_num = True) #compute number of ecDNA    
+    sizes = []
+    for i in np.unique(numcc[0])[1:]:
+        sizes.append(np.sum(numcc[0] == i))
+    return numcc[1], np.sum(sizes)
+
+def count_colocalization(ob1, ob2):
+    regs = measure.label(ob1)
+    num_coloc = 0
+    for r in np.unique(regs)[1:]:
+        mask = (regs == r)
+        temp = mask*ob2
+        if(np.sum(temp) >= 1):
+            num_coloc += 1
+    return num_coloc
 
 def split_FISH_channels(I, image_path, sensitivity):
     path_split = os.path.split(image_path)

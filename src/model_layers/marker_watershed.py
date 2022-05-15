@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 from scipy import ndimage as ndi
-from skimage import morphology
+from skimage import morphology, segmentation
 from skimage.measure import regionprops
 
 
@@ -81,7 +81,7 @@ def _watershed(scores, proposals, pred_mask, min_score=0.99):
                     
             markers_rw = morphology.dilation(markers, morphology.disk(3))
             distance = ndi.distance_transform_edt(ndi.binary_fill_holes(mask))
-            contour = morphology.watershed(-distance, markers_rw, mask = mask, watershed_line = True)
+            contour = segmentation.watershed(-distance, markers_rw, mask = mask, watershed_line = True)
             contour[contour != 0] = 1
         else:
             contour = np.ones([im_height, im_width], dtype=np.int32)

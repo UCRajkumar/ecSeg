@@ -1,6 +1,8 @@
-images/*
+im/*
 src/__pycache__
 src/nuset_utils/__pycache__
 src/model_layers/__pycache__
-models/*
+models/
 .DS_*
+.ipynb_checkpoints
+Untitled.ipynb

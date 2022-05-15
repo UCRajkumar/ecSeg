@@ -1,16 +1,15 @@
-metaseg:
-        inpath :  "images"
-
+interseg:
+  FISH_color: green
+  inpath: HER2\
 meta_overlay:
-        inpath :  "snu16"
-        FISH_color : "red"
-        two_fish_bool : "True"
-        color_sensitivity : 85
-
+  color_sensitivity: 85
+  inpath: du145_red_hsr
+metaseg:
+  inpath: du145_red_hsr
 nuclei_fish:
-        inpath :  "images"
-        FISH_color : "red"
-        color_sensitivity : 85
-        min_score : 0.95
-        nms_threshold : 0.15
-        scale_ratio : 1
+  color_sensitivity: 85
+  nuclei_size_T: 500
+  inpath: du145_red_hsr
+  min_score: 0.95
+  nms_threshold: 0.01
+  scale_ratio: 0.1

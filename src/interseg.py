@@ -1,56 +1,126 @@
 #!/usr/bin/env python3
-################## IN PROGRESS #################
 import yaml, glob, os, sys, pickle
 import pandas as pd
 import numpy as np
 from utils import *
+from image_tools import *
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
+from scipy import ndimage as ndi
+from skimage import *
 
-META_MODEL = 'metaseg.h5'
+import warnings
+warnings.filterwarnings('ignore')
+
+import tensorflow.python.util.deprecation as deprecation
+deprecation._PRINT_DEPRECATION_WARNINGS = False
+
 INTER_MODEL = 'interseg.h5'
 CELL_THRESHOLD = 0.5
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+IMG_THRESHOLD = 0.5
+
+def split_nuclei_segments(img, overlap = 75, scw = 256): 
+    h, w = img.shape[:2]
+    patches = []
+    for i in range(0, math.ceil(h/scw)):
+        min_row = i*scw
+        max_row = min_row + scw
+        if(max_row > h):
+            if(max_row - h < overlap):
+                continue
+            else:
+                max_row = h
+                min_row = max_row - scw
+        for j in range(0, math.ceil(w/scw)):
+            min_col = j*scw
+            max_col = min_col + scw
+            if(max_col > w):
+                if(max_row - h < overlap):
+                    continue
+                else:
+                    max_col = w
+                    min_col = max_col - scw
+                    patches.append(img[min_row:max_row, min_col:max_col, :])
+    return patches
 
 def main(argv):
 
     config = open("config.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['interseg']
     inpath = var['inpath']
-    fish_index = var['FISH_color']
+    fish_color = var['FISH_color'].lower()
 
-    #create folders  
+    #check input parameters
     if(os.path.isdir(os.path.join(inpath)) == False):
         print("Input folder does not exist. Exiting...")
         sys.exit(2)
+    else:
+        if((fish_color != 'green') & (fish_color != 'red')):
+            print("FISH_color can only be \"green\" or \"red\". Please update the config.yaml file accordingly.")
+            sys.exit(2)
+     
+    if(fish_color == 'green'):
+        fish_index = 1
+
+    if(fish_color == 'red'):
+        fish_index = 0
 
     if(os.path.exists(os.path.join(inpath, 'dapi'))):
         pass
     else:
         os.mkdir(os.path.join(inpath, 'dapi'))
 
-    if(os.path.exists(os.path.join(inpath, 'labels'))):
+    if(os.path.exists(os.path.join(inpath, 'nuclei'))):
         pass
     else:
-        os.mkdir(os.path.join(inpath, 'labels'))
+        os.mkdir(os.path.join(inpath, 'nuclei'))
 
-    #meta_model = load_model(META_MODEL)
-    inter_model = load_model(INTER_MODEL)
     image_paths = get_imgs(inpath)
-    print("Reading from: ", inpath)
-    print("Identifying cells...")
-    '''
+
+    model = load_model(INTER_MODEL)
+
     for i in image_paths:
-        I = meta_segment(meta_model, i)
         path_split = os.path.split(i)
-        outpath = os.path.join(path_split[0], 'labels', path_split[1].split('.')[0])
-        print("Saving segmentation of cells: ", i, " to ", outpath)
-        np.save(outpath, I)
-    '''
-    print("Classifying images...")
-    for i in image_paths: 
-        clasification = inter_classify(inter_model, i, fish_index, CELL_THRESHOLD)
-        print(i, classification)
+        print("Processing image: ", i)
+        
+        I = u16_to_u8(imread(i))
+        seg_cells_path = os.path.join(path_split[0], 'nuclei', path_split[1])
+        segmented_cells = io.imread(seg_cells_path)
+        print('image read.')
+        
+        imheight, imwidth = segmented_cells.shape
+        I = I[:imheight, :imwidth]
+
+        segmented_cells = measure.label(segmented_cells)
+        regions = measure.regionprops(segmented_cells)
+
+        cells = []
+        cell_count = 0
+        for region in regions:
+            mask = (segmented_cells == region.label)
+            temp = I.copy()
+            temp[~mask] = 0
+            bb = region.bbox
+            h = bb[2] - bb[0]; w = bb[3] - bb[1]
+            nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w), fish_index]
+            if((h <= 256) & (w <= 256)):
+                cell_prediction = model.predict(np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0))
+                cells.append(cell_prediction)
+            else:
+                patches = split_nuclei_segments(nuclei)
+                for p in patches: 
+                    cell_prediction = model.predict(np.expand_dims(p, 0))
+                    cells.append(cell_prediction)
+            cell_count += 1
+            if(cell_count > 150):
+                break
+        
+        cells = np.array(cells)
+        cell_predictions = []
+        for j in cells:
+            cell_predictions.append(j[0][0] > CELL_THRESHOLD)
+        print(path_split[1], np.sum(cell_predictions)/len(cell_predictions) > IMG_THRESHOLD)
+
 
 if __name__ == "__main__":
    main(sys.argv[1:])
