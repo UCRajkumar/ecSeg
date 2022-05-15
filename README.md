@@ -10,7 +10,7 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 | ---------------- | ------------------------------------------- |
 | config.yaml      | File to set parameters for different tasks  |
 | Makefile         | Makefile to run the different scripts       |
-| requirements.txt | Requirement file for setting up environment |
+| env.yml | Yaml file for setting up environment |
 | setup.sh         | Script to install ecSeg package             |
 
 ...
