@@ -15,7 +15,7 @@ warnings.filterwarnings('ignore')
 import tensorflow.python.util.deprecation as deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
-INTER_MODEL = 'interseg.h5'
+INTER_MODEL = 'interseg'
 CELL_THRESHOLD = 0.5
 IMG_THRESHOLD = 0.5
 
@@ -78,7 +78,7 @@ def main(argv):
     image_paths = get_imgs(inpath)
 
     model = load_model(INTER_MODEL)
-
+    img_dict = {}
     for i in image_paths:
         path_split = os.path.split(i)
         print("Processing image: ", i)
@@ -86,40 +86,38 @@ def main(argv):
         I = u16_to_u8(imread(i))
         seg_cells_path = os.path.join(path_split[0], 'nuclei', path_split[1])
         segmented_cells = io.imread(seg_cells_path)
-        print('image read.')
         
         imheight, imwidth = segmented_cells.shape
-        I = I[:imheight, :imwidth]
+        I = I[:imheight, :imwidth, fish_index]
 
         segmented_cells = measure.label(segmented_cells)
         regions = measure.regionprops(segmented_cells)
 
-        cells = []
-        cell_count = 0
+        # cells = []
+        # cell_count = 0
+        cell_dict = {}
         for region in regions:
+            center = region.centroid
             mask = (segmented_cells == region.label)
-            temp = I.copy()
-            temp[~mask] = 0
+            temp = I * mask
             bb = region.bbox
             h = bb[2] - bb[0]; w = bb[3] - bb[1]
-            nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w), fish_index]
             if((h <= 256) & (w <= 256)):
+                nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w))]
                 cell_prediction = model.predict(np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0))
-                cells.append(cell_prediction)
+                cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
             else:
+                nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w)]
                 patches = split_nuclei_segments(nuclei)
                 for p in patches: 
                     cell_prediction = model.predict(np.expand_dims(p, 0))
-                    cells.append(cell_prediction)
-            cell_count += 1
-            if(cell_count > 150):
-                break
-        
-        cells = np.array(cells)
-        cell_predictions = []
-        for j in cells:
-            cell_predictions.append(j[0][0] > CELL_THRESHOLD)
-        print(path_split[1], np.sum(cell_predictions)/len(cell_predictions) > IMG_THRESHOLD)
+                    cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
+            # cell_count += 1
+            # if(cell_count > 150):
+            #     break
+        img_dict[i] = (cell_dict)
+    df = pd.DataFrame(img_dict).reset_index()
+    df.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
 
 
 if __name__ == "__main__":
