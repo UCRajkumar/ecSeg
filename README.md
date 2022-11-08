@@ -20,7 +20,7 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 | Folder | Description                        |
 | ------ | ---------------------------------- |
 | src    | Contains python scripts            |
-| models | Contains required models. Download models.zip from [here](https://data.mendeley.com/public-files/datasets/m7n3zvg539/files/dd0cdd8a-9763-4a82-adcd-62be932e85ad/file_downloaded) and unzip the folder inside the ecseg/ folder|
+| models | Contains required models. Download models.zip from [here](https://data.mendeley.com/datasets/m7n3zvg539) and unzip the folder inside the ecseg/ folder|
 | example | Example images to test ecSeg       |
 
 ## Installation
