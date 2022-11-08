@@ -135,9 +135,9 @@ nuclei_size_t : Size threshold for finding nuclei. Nuclei smaller than this valu
     4. “#_FISH_blobs (FISH_color)" - # of FISH connected components. 
     5. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
 
-[PROBABILITY OF ANEUPLOIDY] The probability of aneuploidy can be computed by averaging of the #_FISH_blobs for the centromere probe. If the average is close to 2, then there is low evidency of aneuploidy. If the average is >>2, then there is a high probability of aneuploidy. Visually inspect to verify that the cell segmentation predominantly segmented each individual cell. If the image contains extremely clumped cells, the segmentations might be inaccurate and consequently the aneuploidy score will also be skewed.
+**PROBABILITY OF ANEUPLOIDY** The probability of aneuploidy can be computed by averaging of the #_FISH_blobs for the centromere probe. If the average is close to 2, then there is low evidency of aneuploidy. If the average is >>2, then there is a high probability of aneuploidy. Visually inspect to verify that the cell segmentation predominantly segmented each individual cell. If the image contains extremely clumped cells, the segmentations might be inaccurate and consequently the aneuploidy score will also be skewed.
 
-[IDENTIFYING POOR STAINING ARTIFACTS] If the #_FISH_pixels for the oncogene (or centromere) probe is approximately equal to the #_DAPI_pixels then this is typically a cell with poor staining.
+**IDENTIFYING POOR STAINING ARTIFACTS** If the #_FISH_pixels for the oncogene (or centromere) probe is approximately equal to the #_DAPI_pixels then this is typically a cell with poor staining.
 
 
 ## Bibtex
