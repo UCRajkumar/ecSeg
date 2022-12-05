@@ -8,7 +8,7 @@ metaseg:
   inpath: du145_red_hsr
 nuclei_fish:
   color_sensitivity: 85
-  inpath: ../images/patient_tissue2\IVT_023_MDM2r_CEN12g
+  inpath: ../im2
   min_score: 0.95
   nms_threshold: 0.01
   nuclei_size_T: 500

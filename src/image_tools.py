@@ -118,6 +118,11 @@ def count_cc(I):
         sizes.append(np.sum(numcc[0] == i))
     return numcc[1], np.sum(sizes)
 
+def intensity_metrics(I):
+    avg_intensity = np.mean(I[np.nonzero(I)])
+    max_intensity = np.max(I)
+    return avg_intensity, max_intensity
+
 def count_colocalization(ob1, ob2):
     regs = measure.label(ob1)
     num_coloc = 0
