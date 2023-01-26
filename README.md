@@ -180,7 +180,7 @@ FISH_color : Fish probe of interest ('green' or 'red')
 1. **interphase_prediction.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
     2. “nuclei_center” - Center of each nucleus
-    3. “Predictions" - Prediction value in the form of [$P(\text{no-amp}), P(\text{ecDNA}), P(\text{HSR})$]
+    3. “Predictions" - Prediction value in the form of [P(no-amp), P(ecDNA), P(HSR)]
 
 ## Bibtex
 ```
