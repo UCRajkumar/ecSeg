@@ -155,5 +155,6 @@ def nuclei_segment(image, name, resize_scale, sess1, sess2, pred_masks, train_in
     I8 = (((masks_watershed - masks_watershed.min()) / (masks_watershed.max() - masks_watershed.min())) * 255).astype(np.uint8)
     I8[I8 > 0] = 255
     I8 = morphology.remove_small_objects(I8.astype('bool'), NUCLEI_SIZE_T).astype('int') * 255
+    I8 = I8.astype('uint8')
     save_img(I8, name, 'nuclei')
     return I8
