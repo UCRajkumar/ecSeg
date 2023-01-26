@@ -100,6 +100,7 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 
 Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. 
 
+Recommended folder structure:
 ```
 ecseg
 |
@@ -137,11 +138,22 @@ Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
     5. “Avg fish intensity (FISH_color)" - Avg intensity of the corresponding FISH pixels inside nucleus
     6. “Max fish intensity (FISH_color)" - Max intensity of the corresponding FISH pixels inside nucleus
     7. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
+2. **nuclei/plots/hist_FISH_blobs (green).png**
+    1. Histogram of # of green fish blobs per cell across all images in the folder.
+3. **nuclei/plots/hist_FISH_blobs (red).png**
+    1. Histogram of # of red fish blobs per cell across all images in the folder.
 
 
 ### `make interseg`
 Predicts the probability of each nucleus having no amplification, HSR amplification, and ecDNA amplification for the oncogene (i.e. FISH probe) of interest.
 
+Interseg requires an updated version of Tensorflow. Please run the following two commands inside your `ecseg` conda env.
+```
+conda install pip
+pip install tensorflow==2.8
+```
+
+Recommended folder structure:
 ```
 ecseg
 |
@@ -156,7 +168,7 @@ ecseg
 |  |  ...
 ```
 
-Set parameters in config.yaml under `nuclei_fish`:
+Set parameters in config.yaml under `interseg`:
 
 ````
 inpath : path to folder containing images
@@ -168,7 +180,7 @@ FISH_color : Fish probe of interest ('green' or 'red')
 1. **interphase_prediction.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
     2. “nuclei_center” - Center of each nucleus
-    3. “Predictions" - Prediction value in the form of [P(no-amp), P(ecDNA), p(HSR)]
+    3. “Predictions" - Prediction value in the form of [$P(\text{no-amp}), P(\text{ecDNA}), P(\text{HSR})$]
 
 ## Bibtex
 ```
