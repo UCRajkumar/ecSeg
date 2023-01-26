@@ -143,10 +143,11 @@ def main(argv):
             dfs.append(df)
         
         dfs = pd.concat(dfs)
-        dfs.to_csv(os.path.join(path_split[0],  'nuclei', 'nuclei_fish.csv'), index=False)
+        dfs.to_csv(os.path.join(path_split[0],  'nuclei_fish.csv'), index=False)
         sess1.close()
         sess2.close()
 
+    plt.close('all')
     sns.histplot(data=dfs, x='#_FISH_blobs (' + first_fish + ')')
     plt.savefig(os.path.join(inpath, 'nuclei', 'plots', 'hist_FISH_blobs (' + first_fish + ')'))
     plt.close('all')
