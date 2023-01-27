@@ -145,12 +145,6 @@ Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
 ### `make interseg`
 Predicts the probability of each nucleus having no amplification, HSR amplification, and ecDNA amplification for the oncogene (i.e. FISH probe) of interest.
 
-Interseg requires an updated version of Tensorflow. Please run the following two commands inside your `ecseg` conda env.
-```
-conda install pip
-pip install tensorflow==2.8
-```
-
 Recommended folder structure:
 ```
 ecseg
