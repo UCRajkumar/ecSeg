@@ -30,8 +30,6 @@ git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
 conda env create -f env.yml
 conda activate ecseg
-pip install numpy==1.19.2
-pip install imagecodecs
 ```
 
 Always make sure the `ecseg` environment is activated before executing any tasks:
