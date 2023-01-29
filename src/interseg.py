@@ -65,15 +65,11 @@ def main(argv):
     if(fish_color == 'red'):
         fish_index = 0
 
-    if(os.path.exists(os.path.join(inpath, 'dapi'))):
+    if(os.path.exists(os.path.join(inpath, 'annotated'))):
         pass
     else:
-        os.mkdir(os.path.join(inpath, 'dapi'))
+        os.mkdir(os.path.join(inpath, 'annotated'))
 
-    if(os.path.exists(os.path.join(inpath, 'nuclei'))):
-        pass
-    else:
-        os.mkdir(os.path.join(inpath, 'nuclei'))
 
     image_paths = get_imgs(inpath)
 
@@ -84,7 +80,7 @@ def main(argv):
         print("Processing image: ", i)
         
         I = u16_to_u8(imread(i))
-        seg_cells_path = os.path.join(path_split[0], 'nuclei', path_split[1])
+        seg_cells_path = os.path.join(path_split[0], 'annotated', path_split[1][:-4], f"{path_split[1][:-4]}_segmentation.tif")
         segmented_cells = io.imread(seg_cells_path)
         
         imheight, imwidth = segmented_cells.shape

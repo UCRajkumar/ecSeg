@@ -26,6 +26,7 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 def load_model(model_name):
     import tensorflow as tf
+    print(os.path.join('models', model_name))
     return tf.keras.models.load_model(os.path.join('models', model_name))
 
 def load_nuset(bbox_min_score, nms_thresh, resize_scale):
