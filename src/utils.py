@@ -156,8 +156,4 @@ def nuclei_segment(image, resize_scale, sess1, sess2, pred_masks, train_initial,
     I8[I8 > 0] = 255
     I8 = morphology.remove_small_objects(I8.astype('bool'), NUCLEI_SIZE_T).astype('int') * 255
     I8 = I8.astype('uint8')
-<<<<<<< HEAD
-=======
-    save_img(I8, name, 'nuclei')
->>>>>>> d238ca647327aeacd20f017e4f20895bdf5a2782
     return I8
