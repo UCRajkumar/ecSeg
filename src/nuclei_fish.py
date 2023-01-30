@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 #!/usr/bin/env python3
 import yaml, glob, os, sys
 import pandas as pd
@@ -22,9 +16,6 @@ import tensorflow.python.util.deprecation as deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 
-# In[2]:
-
-
 def scipy_sampled_gaussian_kernel(kernel_shape, sigma=1):
     if not isinstance(kernel_shape, np.ndarray):
         kernel_shape = np.array(kernel_shape)
@@ -36,9 +27,6 @@ def scipy_sampled_gaussian_kernel(kernel_shape, sigma=1):
     grid = np.linalg.norm(np.dstack(np.meshgrid(kernel_axis_x, kernel_axis_x)), axis=2).astype(np.float64)
     gaussian = scipy.stats.norm.pdf(grid, scale=sigma)
     return gaussian / gaussian.sum()
-
-
-# In[3]:
 
 
 def get_gaussian_proj_kernel(kernel_size, sigma):
@@ -58,9 +46,6 @@ def get_gaussian_proj_kernel(kernel_size, sigma):
     return g_kernel_perp
 
 
-# In[4]:
-
-
 def get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff):
     # Get Color Sensitivity
     seg_copy = segmented_cells.copy().astype(bool).astype(np.float32)
@@ -69,9 +54,6 @@ def get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff):
     stdev = np.array([np.nanstd((seg_copy * I[:,:,chan])) for chan in range(1, I.shape[-1])])
     color_sensitivity = mean + (intensity_threshold_std_coeff * stdev)
     return color_sensitivity
-
-
-# In[5]:
 
 
 def get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_sensitivity):
@@ -83,9 +65,6 @@ def get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_s
     thresholded = ((normal_coefficients > normal_threshold) * (I[...,1:] > color_sensitivity)).astype(int)
     thresholded *= np.dstack([segmented_cells] * (num_channels - 1))
     return thresholded
-
-
-# In[6]:
 
 
 def get_boundaries(s, line_thickness=1):
@@ -107,18 +86,12 @@ def get_boundaries(s, line_thickness=1):
     return boundaries
 
 
-# In[7]:
-
-
 def merge_channels(img, aqua_rgb):
     if img.shape[-1] == 3:
         return img
     assert img.shape[-1] == 4
     img = img[...,:-1] + np.dstack([coeff * img[...,-1] / 255 for coeff in aqua_rgb[::-1]])
     return np.minimum(img, 255).astype(np.uint8)
-
-
-# In[8]:
 
 
 def cell_splice_segmentation(i, thresh, s, region):
@@ -129,11 +102,7 @@ def cell_splice_segmentation(i, thresh, s, region):
     return img_splice, thresh_splice, seg_splice, (y_splice, x_splice)
 
 
-# In[9]:
-
-
 def main(argv):
-
     config = open("config.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['nuclei_fish']
     
@@ -281,14 +250,6 @@ def main(argv):
         sess2.close()
 
 
-# In[10]:
-
-
 if __name__ == "__main__":
     main(sys.argv[1:])
-
-
-# In[ ]:
-
-
 
