@@ -99,7 +99,7 @@ def load_nuset(bbox_min_score, nms_thresh, resize_scale):
     return sess1, sess2, pred_masks, train_initial, pred_masks_watershed, resize_scale
 
 def get_imgs(inpath):
-    image_paths = glob.glob(os.path.join(inpath, '*.tif'))
+    image_paths = glob.glob(os.path.join(inpath, '*.tif')) + glob.glob(os.path.join(inpath, '*.npy'))
     return image_paths
 
 def meta_segment(model, image_path):
@@ -127,7 +127,7 @@ def read_seg(image_path):
     ec = (seg_I==3)
     return background, nuclei, chrom, ec
 
-def nuclei_segment(image, name, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, NUCLEI_SIZE_T):
+def nuclei_segment(image, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, NUCLEI_SIZE_T):
     if resize_scale != 1:
         image = rescale(image, resize_scale, anti_aliasing=True)
 
@@ -156,5 +156,4 @@ def nuclei_segment(image, name, resize_scale, sess1, sess2, pred_masks, train_in
     I8[I8 > 0] = 255
     I8 = morphology.remove_small_objects(I8.astype('bool'), NUCLEI_SIZE_T).astype('int') * 255
     I8 = I8.astype('uint8')
-    save_img(I8, name, 'nuclei')
     return I8

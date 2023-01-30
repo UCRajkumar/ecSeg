@@ -6,3 +6,4 @@ models/
 .DS_*
 .ipynb_checkpoints
 Untitled.ipynb
+*.ipynb
