@@ -26,7 +26,6 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 def load_model(model_name):
     import tensorflow as tf
-    print(os.path.join('models', model_name))
     return tf.keras.models.load_model(os.path.join('models', model_name))
 
 def load_nuset(bbox_min_score, nms_thresh, resize_scale):
@@ -156,5 +155,5 @@ def nuclei_segment(image, resize_scale, sess1, sess2, pred_masks, train_initial,
     I8 = (((masks_watershed - masks_watershed.min()) / (masks_watershed.max() - masks_watershed.min())) * 255).astype(np.uint8)
     I8[I8 > 0] = 255
     I8 = morphology.remove_small_objects(I8.astype('bool'), NUCLEI_SIZE_T).astype('int') * 255
-    # save_img(I8, name, 'annotated')
+    I8 = I8.astype('uint8')
     return I8

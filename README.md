@@ -30,8 +30,6 @@ git clone https://github.com/ucrajkumar/ecSeg
 cd ecSeg
 conda env create -f env.yml
 conda activate ecseg
-pip install numpy==1.19.2
-pip install imagecodecs
 ```
 
 Always make sure the `ecseg` environment is activated before executing any tasks:
@@ -100,12 +98,13 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 
 Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. 
 
+Recommended folder structure:
 ```
 ecseg
 |
 |--models
 |--|  metaseg.h5
-|  |--nuset
+|--|--nuset
 |     |  foreground.ckpt.data-00000-of-00001
 |     |  foreground.ckpt.index
 |     |  ...
@@ -121,17 +120,59 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
 min_score : 0.95
 nms_threshold : Threshold to suppress oversegmentation. (Recommended value: 0.01)
 scale_ratio : Ratio of cell size to image size. (Recommended value: 0.4)
-nuclei_size_t : Size threshold for finding nuclei. Nuclei smaller than this value will be considered erroneous signals. Recommendation: cultured images, use 5000. For tissue use 500.
+nuclei_size_t : Size threshold for finding nuclei. 
+
+Note: Nuclei smaller than nuclei_size_t will be considered erroneous signals. 
+Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
 ````
 
 #### Output
 
 1. **nuclei_fish.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
-    2. “nuclei_center” - Center of each nuclei
-    3. “#_FISH_pixels (FISH_color)" - # of FISH pixels inside nuclei
-    4. “#_FISH_blobs (FISH_color)" - # of FISH connected components. 
-    5. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
+    2. “nuclei_center” - Center of each nucleus
+    3. “#_FISH_pixels (FISH_color)" - # of FISH pixels inside nucleus
+    4. “#_FISH_blobs (FISH_color)" - # of FISH connected components.
+    5. “Avg fish intensity (FISH_color)" - Avg intensity of the corresponding FISH pixels inside nucleus
+    6. “Max fish intensity (FISH_color)" - Max intensity of the corresponding FISH pixels inside nucleus
+    7. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
+2. **nuclei/plots/hist_FISH_blobs (green).png**
+    1. Histogram of # of green fish blobs per cell across all images in the folder.
+3. **nuclei/plots/hist_FISH_blobs (red).png**
+    1. Histogram of # of red fish blobs per cell across all images in the folder.
+
+
+### `make interseg`
+Predicts the probability of each nucleus having no amplification, HSR amplification, and ecDNA amplification for the oncogene (i.e. FISH probe) of interest.
+
+Recommended folder structure:
+```
+ecseg
+|
+|--models
+|--|  metaseg.h5
+|--|  interseg
+|--|--nuset
+|     |  foreground.ckpt.data-00000-of-00001
+|     |  foreground.ckpt.index
+|     |  ...
+|--src
+|  |  ...
+```
+
+Set parameters in config.yaml under `interseg`:
+
+````
+inpath : path to folder containing images
+FISH_color : Fish probe of interest ('green' or 'red')
+````
+
+#### Output
+
+1. **interphase_prediction.csv** - Each row represents a single nucleus. Column headers are as follows:
+    1. “image_name” - Name of image
+    2. “nuclei_center” - Center of each nucleus
+    3. “Predictions" - Prediction value in the form of [P(no-amp), P(ecDNA), P(HSR)]
 
 ## Bibtex
 ```

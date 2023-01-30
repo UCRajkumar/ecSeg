@@ -11,7 +11,6 @@ from skimage import *
 
 import warnings
 warnings.filterwarnings('ignore')
-
 import tensorflow.python.util.deprecation as deprecation
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
@@ -70,11 +69,11 @@ def main(argv):
     else:
         os.mkdir(os.path.join(inpath, 'annotated'))
 
-
     image_paths = get_imgs(inpath)
 
     model = load_model(INTER_MODEL)
     img_dict = {}
+    dfs = []
     for i in image_paths:
         path_split = os.path.split(i)
         print("Processing image: ", i)
@@ -89,9 +88,10 @@ def main(argv):
         segmented_cells = measure.label(segmented_cells)
         regions = measure.regionprops(segmented_cells)
 
-        # cells = []
-        # cell_count = 0
-        cell_dict = {}
+        centroids = []; predictions = []; names = []
+        df = pd.DataFrame()
+
+        # cell_dict = {}
         for region in regions:
             center = region.centroid
             mask = (segmented_cells == region.label)
@@ -101,19 +101,30 @@ def main(argv):
             if((h <= 256) & (w <= 256)):
                 nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w))]
                 cell_prediction = model.predict(np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0))
-                cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
+                # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
+                centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
+                predictions.append(list(cell_prediction[0]))
+                names.append(path_split[-1][:-4])
             else:
                 nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w)]
                 patches = split_nuclei_segments(nuclei)
                 for p in patches: 
                     cell_prediction = model.predict(np.expand_dims(p, 0))
-                    cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
-            # cell_count += 1
-            # if(cell_count > 150):
-            #     break
-        img_dict[i] = (cell_dict)
-    df = pd.DataFrame(img_dict).reset_index()
-    df.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
+                    # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
+                    centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
+                    predictions.append(list(cell_prediction[0]))
+                    names.append(path_split[-1][:-4])
+        
+        df['image_name'] = np.array(names)
+        df['nucleus_center'] = np.array(centroids)
+        df['predictions'] = predictions
+        dfs.append(df)
+        # img_dict[i] = (cell_dict)
+
+    dfs = pd.concat(dfs)
+    dfs.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
+    # df = pd.DataFrame(img_dict).reset_index()
+    # df.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
 
 
 if __name__ == "__main__":
