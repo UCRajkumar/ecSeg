@@ -122,7 +122,7 @@ def main(argv):
         # img_dict[i] = (cell_dict)
 
     dfs = pd.concat(dfs)
-    dfs.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
+    dfs.to_csv(os.path.join(path_split[0],  f'interphase_prediction_{fish_color}.csv'), index=False)
     # df = pd.DataFrame(img_dict).reset_index()
     # df.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
 
