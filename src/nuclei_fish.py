@@ -115,6 +115,10 @@ def main(argv):
     # Minimum pixels for valid connected component
     min_cc_size = var['min_cc_size']
     
+    # Image Resizing Parameters
+    min_nuclei_size = var["min_nuclei_size"]
+    target_median_nuclei_size = var["target_median_nuclei_size"]
+
     # Gaussian Kernel Parameters
     gaussian_kernel_shape = var['gaussian_kernel_shape']
     gaussian_sigma = var['gaussian_sigma']
@@ -168,11 +172,19 @@ def main(argv):
             blue = I[:,:,0]
 
             segmented_cells = nuclei_segment(blue, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, nuclei_size_t)
-            segmented_cells_copy = segmented_cells.copy()
             
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
+            
+            areas = [nuclei.area for nuclei in measure.regionprops(scipy.ndimage.label(segmented_cells)[0]) if nuclei.area > min_nuclei_size]
+            median_size = np.median(areas)
+            scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
+            new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
 
+            I = cv2.resize(I, dsize=new_shape)
+            segmented_cells = cv2.resize(segmented_cells, dsize=new_shape, interpolation=cv2.INTER_NEAREST)
+            segmented_cells_copy = segmented_cells.copy()
+            
             # Get Color Sensitivity
             color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
             
