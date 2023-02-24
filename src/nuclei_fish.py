@@ -180,17 +180,18 @@ def main(argv):
             median_size = np.median(areas)
             scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
             new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
-
-            I = cv2.resize(I, dsize=new_shape)
-            segmented_cells = cv2.resize(segmented_cells, dsize=new_shape, interpolation=cv2.INTER_NEAREST)
+            I_resized = cv2.resize(I, dsize=new_shape[::-1])
+            segmented_cells_resized = cv2.resize(segmented_cells, dsize=new_shape[::-1], interpolation=cv2.INTER_NEAREST)
             segmented_cells_copy = segmented_cells.copy()
             
             # Get Color Sensitivity
-            color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+            color_sensitivity = get_sensitivity(I_resized, segmented_cells_resized, intensity_threshold_std_coeff)
             
             num_channels = I.shape[-1]
             
-            thresholded = get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_sensitivity)
+            thresholded = get_thresholded(I_resized, segmented_cells_resized, g_kernel_perp, normal_threshold, color_sensitivity)
+            
+            thresholded = cv2.resize(thresholded, dsize=(imwidth, imheight), interpolation=cv2.INTER_NEAREST)
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
             segmented_cells = measure.label(segmented_cells)
