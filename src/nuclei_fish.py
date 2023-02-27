@@ -181,8 +181,8 @@ def main(argv):
             scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
             new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
 
-            I = cv2.resize(I, dsize=new_shape)
-            segmented_cells = cv2.resize(segmented_cells, dsize=new_shape, interpolation=cv2.INTER_NEAREST)
+            I = cv2.resize(I, dsize=new_shape[::-1])
+            segmented_cells = cv2.resize(segmented_cells, dsize=new_shape[::-1], interpolation=cv2.INTER_NEAREST)
             segmented_cells_copy = segmented_cells.copy()
             
             # Get Color Sensitivity
