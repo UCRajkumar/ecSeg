@@ -56,7 +56,29 @@ def get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff):
     return color_sensitivity
 
 
-def get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_sensitivity):
+def get_boundary_sum_kernel(gaussian_stdev, kernel_side_size):
+    arr = scipy_sampled_gaussian_kernel((kernel_side_size, kernel_side_size), gaussian_stdev)
+    return np.sum((arr[0].sum(), (arr[-1].sum() if arr.shape[0] > 1 else 0), arr[1:-1,0].sum(), arr[1:,-1].sum()))
+
+
+def get_kernel_shape(gaussian_stdev, max_kernel_size=50, sum_thresh=0.1):
+    low, high = 5, max_kernel_size if max_kernel_size % 2 else max_kernel_size+1
+    while low < high:
+        kernel_side_size = (((low + high - 2) // 4) * 2) + 1
+        assert kernel_side_size % 2
+        prev, curr = [get_boundary_sum_kernel(gaussian_stdev, kss) <= sum_thresh for kss in (kernel_side_size-2, kernel_side_size)]
+        if prev and curr:
+            high = kernel_side_size
+        elif not prev and not curr:
+            low = kernel_side_size + 2
+        else:
+            return (kernel_side_size, kernel_side_size)
+    raise AssertionError
+
+
+def get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity):
+    gaussian_kernel_shape = get_kernel_shape(gaussian_stdev)  
+    g_kernel_perp = get_gaussian_proj_kernel(gaussian_kernel_shape, gaussian_stdev)
     num_channels = I.shape[-1]
     inter = np.expand_dims([I[...,channel] for channel in range(1, num_channels)], -1).astype(np.float64)
     normal_coefficients = tf.nn.conv2d(inter, g_kernel_perp, strides=1, padding="SAME").eval(session=tf.compat.v1.Session())
@@ -102,6 +124,14 @@ def cell_splice_segmentation(i, thresh, s, region):
     return img_splice, thresh_splice, seg_splice, (y_splice, x_splice)
 
 
+
+def get_scale(segmented_cells, target_median_nuclei_size, min_nuclei_size):
+    areas = [nuclei.area for nuclei in measure.regionprops(scipy.ndimage.label(segmented_cells)[0]) if nuclei.area > min_nuclei_size]
+    median_size = np.median(areas)
+    scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
+    return scaling_factor
+
+
 def main(argv):
     config = open("config.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['nuclei_fish']
@@ -111,10 +141,7 @@ def main(argv):
     # Intensity and Normal Distribution Scaled Thresholds
     normal_threshold = var['normal_threshold']
     intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
-    
-    # Minimum pixels for valid connected component
-    min_cc_size = var['min_cc_size']
-    
+        
     # Image Resizing Parameters
     min_nuclei_size = var["min_nuclei_size"]
     target_median_nuclei_size = var["target_median_nuclei_size"]
@@ -122,9 +149,7 @@ def main(argv):
     # Gaussian Kernel Parameters
     gaussian_kernel_shape = var['gaussian_kernel_shape']
     gaussian_sigma = var['gaussian_sigma']
-    g_kernel_perp = get_gaussian_proj_kernel(gaussian_kernel_shape, gaussian_sigma)
 
-    
     # Cosmetic: thickness of segmentation lines
     line_thickness = var['line_thickness']
     aqua_rgb = [233, 137, 54]
@@ -175,14 +200,12 @@ def main(argv):
             
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
-            
-            areas = [nuclei.area for nuclei in measure.regionprops(scipy.ndimage.label(segmented_cells)[0]) if nuclei.area > min_nuclei_size]
-            median_size = np.median(areas)
-            scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
-            new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
 
-            I = cv2.resize(I, dsize=new_shape[::-1])
-            segmented_cells = cv2.resize(segmented_cells, dsize=new_shape[::-1], interpolation=cv2.INTER_NEAREST)
+            scaling_factor = var['scale'] if var['scale'] != 'auto' else get_scale(segmented_cells, target_median_nuclei_size, min_nuclei_size)
+            gaussian_stdev = gaussian_sigma / scaling_factor
+            min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
+
+            new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
             segmented_cells_copy = segmented_cells.copy()
             
             # Get Color Sensitivity
@@ -190,7 +213,7 @@ def main(argv):
             
             num_channels = I.shape[-1]
             
-            thresholded = get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_sensitivity)
+            thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity)
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
             segmented_cells = measure.label(segmented_cells)
@@ -241,7 +264,7 @@ def main(argv):
             dfs.append(df)
             
             thresholds_abbreviation = '_'.join([f"{letter}{format(x, '.1f')}" for letter, x in zip(['g', 'r', 'aq'], color_sensitivity)])
-            image_least_squares_path = f"{annotated_path}/{img_name}_lsq_n{normal_threshold}_s{min_cc_size}_{thresholds_abbreviation}.tif"
+            image_least_squares_path = f"{annotated_path}/{img_name}_lsq_n{normal_threshold}_std{format(gaussian_stdev, '.2f')}_s{min_cc_size}_{thresholds_abbreviation}.tif"
             boundaries = get_boundaries(segmented_cells, line_thickness=line_thickness)
             
             I = merge_channels(I, aqua_rgb).astype(np.uint8)

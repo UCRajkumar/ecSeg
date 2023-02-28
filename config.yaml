@@ -7,12 +7,11 @@ meta_overlay:
 metaseg:
   inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
 nuclei_fish:
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/HCC827_gCON7_rEGFR_interphase
-
+  inpath: /home/giprasad/test_dataset_3_channel
   # Peak Threshold Parameters
   normal_threshold: 15
   intensity_threshold_std_coeff: 1
-  min_cc_size: 9
+  min_cc_size: 7
   
   # Image Resizing Parameters
   min_nuclei_size: 1000
@@ -21,6 +20,7 @@ nuclei_fish:
   # Gaussian Kernel Parameters
   gaussian_kernel_shape: [7, 7]
   gaussian_sigma: 3
+  scale: 'auto'
 
   # Cosmetic Parameters
   line_thickness: 2
