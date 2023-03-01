@@ -1,32 +1,22 @@
 interseg:
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/THP1_gCEP1_rMycL1_interphase
   FISH_color: green
+  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/THP1_gCEP1_rMycL1_interphase
 meta_overlay:
-  inpath: du145_red_hsr
   color_sensitivity: 85
+  inpath: du145_red_hsr
 metaseg:
   inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
 nuclei_fish:
-  inpath: /home/giprasad/test_dataset_3_channel
-  # Peak Threshold Parameters
-  normal_threshold: 15
-  intensity_threshold_std_coeff: 1
-  min_cc_size: 7
-  
-  # Image Resizing Parameters
-  min_nuclei_size: 1000
-  target_median_nuclei_size: 2000
-
-  # Gaussian Kernel Parameters
-  gaussian_kernel_shape: [7, 7]
   gaussian_sigma: 3
-  scale: 'auto'
-
-  # Cosmetic Parameters
+  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/Ni17PDX
+  intensity_threshold_std_coeff: 1
   line_thickness: 2
-
-  # NuSeT Parameters
+  min_cc_size: 9
+  min_nuclei_size: 1000
   min_score: 0.95
   nms_threshold: 0.01
+  normal_threshold: 15
   nuclei_size_T: 500
+  scale: auto
   scale_ratio: 0.3
+  target_median_nuclei_size: 2000

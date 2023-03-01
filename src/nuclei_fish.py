@@ -147,7 +147,6 @@ def main(argv):
     target_median_nuclei_size = var["target_median_nuclei_size"]
 
     # Gaussian Kernel Parameters
-    gaussian_kernel_shape = var['gaussian_kernel_shape']
     gaussian_sigma = var['gaussian_sigma']
 
     # Cosmetic: thickness of segmentation lines
