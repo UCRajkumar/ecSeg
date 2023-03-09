@@ -3,6 +3,7 @@ import yaml, glob, os, sys
 import pandas as pd
 import numpy as np
 from utils import *
+import max_flow_binary_mask
 from image_tools import *
 import seaborn as sns
 from skimage import *
@@ -158,6 +159,8 @@ def main(argv):
     nms_thresh = var['nms_threshold']
     resize_scale = var['scale_ratio']
     nuclei_size_t = var['nuclei_size_T']
+    flow_limit = var['flow_limit']
+    cell_size_threshold_coeff = var['cell_size_threshold_coeff']
 
     #check input parameters
     if(os.path.isdir(os.path.join(inpath)) == False):
@@ -197,13 +200,15 @@ def main(argv):
 
             segmented_cells = nuclei_segment(blue, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, nuclei_size_t)
             
+            if not segmented_cells.any():
+                continue
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
 
             scaling_factor = var['scale'] if var['scale'] != 'auto' else get_scale(segmented_cells, target_median_nuclei_size, min_nuclei_size)
             gaussian_stdev = gaussian_sigma / scaling_factor
             min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
-
+            
             new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
             segmented_cells_copy = segmented_cells.copy()
             
@@ -215,7 +220,7 @@ def main(argv):
             thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity)
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
-            segmented_cells = measure.label(segmented_cells)
+            segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
             regions = measure.regionprops(segmented_cells)
     
             names = []; cell_sizes = []; centroids = []; 
@@ -273,8 +278,10 @@ def main(argv):
                 blob_labeled_img = merge_channels(blob_labeled_img, aqua_rgb)
             blob_labeled_img = blob_labeled_img.astype(np.uint8)
             
+            np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", segmented_cells)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation.tif", segmented_cells_copy)
-            assert cv2.imwrite(f"{annotated_path}/{img_name}_with_segmentation.tif", img_with_segmentation)
+            assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", np.dstack([labeled_segmented_cells_visualization]*3).astype(np.uint8))
+            assert cv2.imwrite(f"{annotated_path}/{img_name}_original_with_segmentation.tif", img_with_segmentation)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original.tif", I)
             assert cv2.imwrite(image_least_squares_path, blob_labeled_img)
             
