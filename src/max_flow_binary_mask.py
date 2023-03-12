@@ -131,19 +131,53 @@ def segment_min_cut(mask, centers, dist):
     groups_2 = segment_min_cut(group_2, color_2_group, dist)
     return groups_1 + groups_2
 
+def get_centers(segmented_cells, min_rad=10):
+#     segmented_cells = 255 * (tf.nn.conv2d(np.expand_dims(segmented_cells.astype(np.int32), (0, 3)), np.ones((3, 3, 1, 1)), strides=1, padding='SAME')[0,...,0].numpy() > 0).astype(np.uint8)
+    distance_transformed = cv2.distanceTransform(segmented_cells.astype(np.uint8), cv2.DIST_L1, 3)
+    distance_transformed = np.expand_dims(distance_transformed, (0, 3))
+    grad = [segmented_cells[1:-1,1:-1]]
+    kernel = [1, -1]
+    for dim in (0, 1):
+        s_kernel = np.expand_dims(kernel, (1-dim, 2, 3))
+        conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].numpy() 
+        if not dim:
+            boolean = (conv[1:,1:-1] >= 0) * (conv[:-1,1:-1] <= 0)
+        else:
+            boolean = (conv[1:-1,1:] >= 0) * (conv[1:-1,:-1] <= 0)     
+        grad.append(boolean)
+        
+        
+    kernel = [
+        [1, 0],
+        [0, -1]
+    ]
+    s_kernel = np.expand_dims(kernel, (2, 3))
+    conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].numpy()
+    grad.append((conv[1:,1:] >= 0) * (conv[:-1,:-1] <= 0))
+    
+    kernel = [
+        [0, 1],
+        [-1, 0]
+    ]   
+    s_kernel = np.expand_dims(kernel, (2, 3))
+    conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].numpy()
+    grad.append((conv[1:,:-1] >= 0) * (conv[:-1,1:] <= 0))
+    grad.append(distance_transformed[0,1:-1,1:-1,0] > min_rad)
+    grad = np.expand_dims(np.prod(np.array(grad), axis=0), (0, 3)).astype(np.int32)
+    
+    min_rad = max((distance_transformed[0,1:-1,1:-1,0][grad[0,...,0] > 0]).min(), min_rad)
+    centers = 255 * (distance_transformed[0,1:-1,1:-1,0] >= min_rad)
+    return np.pad(centers, 1)
+
 
 def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff):
     labeled_segmented_cells, num_cells = skimage.measure.label(segmented_cells, connectivity=1, return_num=True)
     areas = [region.area for region in skimage.measure.regionprops(labeled_segmented_cells)]
     expected_cell_size = np.median(areas)
     distance = (-1 + int(np.sqrt(1 + (2 * flow_limit)))) // 2
+    print(f"DISTANCE: {distance}")
     assert distance > 0
-    center_kernel_size = (flow_limit, flow_limit)
-    center_kernel = np.ones(center_kernel_size).astype(int)
-
-
-    print(f"MAX NUMBER OF EDGES REMOVED: {2 * distance * (distance + 1)}")
-    print(f"UNIFORM KERNEL SHAPE: {center_kernel_size}")
+    # print(f"MAX NUMBER OF EDGES REMOVED: {2 * distance * (distance + 1)}")
 
     visualization = np.zeros_like(labeled_segmented_cells)
     updated_labeled_segmented_cells = labeled_segmented_cells.copy()
@@ -153,11 +187,11 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
         composite, cells = mask, [0]
         if region.area > cell_size_threshold_coeff * expected_cell_size:
 
-            center_conv = (scipy.signal.convolve2d(mask, center_kernel, mode='same') == center_kernel.sum()).astype(int)
+            center_conv = get_centers(mask)
 
             center_ls = []
 
-            labeled_center_conv = skimage.measure.label(center_conv, connectivity=1)
+            labeled_center_conv = skimage.measure.label(center_conv, connectivity=2)
             for cell_region in skimage.measure.regionprops(labeled_center_conv):
                 centroid = (np.round(cell_region.centroid)).astype(int)
                 if not mask[centroid[0], centroid[1]]:
@@ -168,6 +202,12 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
                     centroid = alternative
                 center_ls.append(centroid)
             center_ls = list(map(lambda center: tuple(np.round(center).astype(int)), center_ls))
+            
+            
+            ##### REMOVE LATER
+            center_vis = np.zeros_like(mask)
+            for center in center_ls:
+                center_vis[center] = 1
 
             composite = mask.copy()
             if len(center_ls) > 1:
@@ -181,7 +221,18 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
                     else:
                         num_cells += 1
                         updated_labeled_segmented_cells[region.slice] += cell * (num_cells)
-                    composite += cell * i                
+                    composite += cell * i
+            
+            
+            
+#             fig, axs = plt.subplots(1, 3, dpi=150)            
+#             axs[0].imshow(np.dstack([mask * 255, center_conv * 255, np.zeros_like(mask)]))
+#             axs[1].imshow(np.dstack([mask * 255, center_vis * 255, np.zeros_like(mask)]))
+#             axs[2].imshow(composite)
+#             for axis in axs:
+#                 axis.axis(False)
+#             plt.show()
         visualization[region.slice] += (composite * (255 // len(cells)))
     assert num_cells == updated_labeled_segmented_cells.max()
     return updated_labeled_segmented_cells, visualization
+

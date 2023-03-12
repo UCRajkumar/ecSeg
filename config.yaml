@@ -8,9 +8,9 @@ metaseg:
   inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
 nuclei_fish:
   cell_size_threshold_coeff: 1.25
-  flow_limit: 12
+  flow_limit: 60
   gaussian_sigma: 3
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
+  inpath: /home/giprasad/test_dataset_3_channel
   intensity_threshold_std_coeff: 1
   line_thickness: 2
   min_cc_size: 7
