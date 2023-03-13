@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import random
 
+
 class Edge:
     def __init__(self, start, end, capacity, flow=0):
         self.start = start
@@ -36,6 +37,7 @@ class Edge:
         self.capacity = capacity
         self.flow = flow
         self.reverse = None # pointer to reverse edge
+
 
 def add_forward_reverse_edges(residual_graph, start_node, end_node, forward_capacity=1):
     # Creates a forward and reverse edge(capacity 0) 
@@ -51,6 +53,7 @@ def add_forward_reverse_edges(residual_graph, start_node, end_node, forward_capa
     residual_graph[start_node].append(forward_edge)
     residual_graph[end_node].append(reverse_edge)
 
+
 def get_graph(img, start, target, dist):
     residual_graph = defaultdict(list)
     neighbors = lambda y, x: [(y+y_diff, x+x_diff) for y_diff, x_diff in ((1, 0), (0, 1), (-1, 0), (0, -1)) if (0 <= y+y_diff < len(img) and 0 <= x+x_diff < len(img[0]))]
@@ -65,6 +68,7 @@ def get_graph(img, start, target, dist):
                     if img[neighbor[0], neighbor[1]]:
                         add_forward_reverse_edges(residual_graph, (i, j), neighbor, 1)
     return residual_graph
+
 
 def bfs(residual_graph, start, target, return_reachable=False):
     prev = {start: None}
@@ -83,6 +87,7 @@ def bfs(residual_graph, start, target, return_reachable=False):
         path.append(prev[path[-1].start])
     return list(reversed(path))
 
+
 def max_flow(res, start, target):
     # stores current flow
     current_flow = 0
@@ -99,6 +104,7 @@ def max_flow(res, start, target):
         edge_path = bfs(res, start, target)
     return current_flow
 
+
 def partition_min_cut(img, res, start, target):
     current_flow = max_flow(res, start, target)
     group_1 = np.zeros_like(img)
@@ -108,7 +114,7 @@ def partition_min_cut(img, res, start, target):
     return group_1, group_2
 
 
-def segment_min_cut(mask, centers, dist):
+def segment_min_cut(mask, centers, dist, min_size=100):
     if not centers:
         return []
     elif len(centers) == 1:
@@ -116,11 +122,11 @@ def segment_min_cut(mask, centers, dist):
     center_1, center_2 = centers[:2]
     res = get_graph(mask, center_1, center_2, dist)
     group_1, group_2 = partition_min_cut(mask, res, center_1, center_2)
-    if group_1.sum() == 1:
+    if group_1.sum() < min_size:
         group_1 = np.zeros_like(mask)
         group_2 = mask
         centers.remove(center_1)
-    elif group_2.sum() == 1:
+    elif group_2.sum() < min_size:
         group_2 = np.zeros_like(mask)
         group_1 = mask
         centers.remove(center_2)
@@ -131,7 +137,8 @@ def segment_min_cut(mask, centers, dist):
     groups_2 = segment_min_cut(group_2, color_2_group, dist)
     return groups_1 + groups_2
 
-def get_centers(segmented_cells, min_rad=10):
+
+def get_centers(segmented_cells, min_rad=10, percentile=0):
 #     segmented_cells = 255 * (tf.nn.conv2d(np.expand_dims(segmented_cells.astype(np.int32), (0, 3)), np.ones((3, 3, 1, 1)), strides=1, padding='SAME')[0,...,0].numpy() > 0).astype(np.uint8)
     distance_transformed = cv2.distanceTransform(segmented_cells.astype(np.uint8), cv2.DIST_L1, 3)
     distance_transformed = np.expand_dims(distance_transformed, (0, 3))
@@ -139,7 +146,7 @@ def get_centers(segmented_cells, min_rad=10):
     kernel = [1, -1]
     for dim in (0, 1):
         s_kernel = np.expand_dims(kernel, (1-dim, 2, 3))
-        conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].numpy() 
+        conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].eval(session=tf.compat.v1.Session())
         if not dim:
             boolean = (conv[1:,1:-1] >= 0) * (conv[:-1,1:-1] <= 0)
         else:
@@ -152,7 +159,7 @@ def get_centers(segmented_cells, min_rad=10):
         [0, -1]
     ]
     s_kernel = np.expand_dims(kernel, (2, 3))
-    conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].numpy()
+    conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].eval(session=tf.compat.v1.Session())
     grad.append((conv[1:,1:] >= 0) * (conv[:-1,:-1] <= 0))
     
     kernel = [
@@ -160,12 +167,13 @@ def get_centers(segmented_cells, min_rad=10):
         [-1, 0]
     ]   
     s_kernel = np.expand_dims(kernel, (2, 3))
-    conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].numpy()
+    conv = tf.nn.conv2d(distance_transformed, s_kernel, strides=1, padding='VALID')[0, :, :, 0].eval(session=tf.compat.v1.Session())
     grad.append((conv[1:,:-1] >= 0) * (conv[:-1,1:] <= 0))
     grad.append(distance_transformed[0,1:-1,1:-1,0] > min_rad)
     grad = np.expand_dims(np.prod(np.array(grad), axis=0), (0, 3)).astype(np.int32)
     
-    min_rad = max((distance_transformed[0,1:-1,1:-1,0][grad[0,...,0] > 0]).min(), min_rad)
+    percentile = np.percentile(distance_transformed[0,1:-1,1:-1,0][grad[0,...,0] > 0], percentile)
+    min_rad = max(percentile, min_rad)
     centers = 255 * (distance_transformed[0,1:-1,1:-1,0] >= min_rad)
     return np.pad(centers, 1)
 
@@ -175,7 +183,7 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
     areas = [region.area for region in skimage.measure.regionprops(labeled_segmented_cells)]
     expected_cell_size = np.median(areas)
     distance = (-1 + int(np.sqrt(1 + (2 * flow_limit)))) // 2
-    print(f"DISTANCE: {distance}")
+#     print(f"DISTANCE: {distance}")
     assert distance > 0
     # print(f"MAX NUMBER OF EDGES REMOVED: {2 * distance * (distance + 1)}")
 

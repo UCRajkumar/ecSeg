@@ -126,8 +126,8 @@ def cell_splice_segmentation(i, thresh, s, region):
 
 
 
-def get_scale(segmented_cells, target_median_nuclei_size, min_nuclei_size):
-    areas = [nuclei.area for nuclei in measure.regionprops(scipy.ndimage.label(segmented_cells)[0]) if nuclei.area > min_nuclei_size]
+def get_scale(segmented_cells, target_median_nuclei_size):
+    areas = [nuclei.area for nuclei in measure.regionprops(scipy.ndimage.label(segmented_cells)[0])]
     median_size = np.median(areas)
     scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
     return scaling_factor
@@ -144,7 +144,7 @@ def main(argv):
     intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
         
     # Image Resizing Parameters
-    min_nuclei_size = var["min_nuclei_size"]
+    scale = var['scale']
     target_median_nuclei_size = var["target_median_nuclei_size"]
 
     # Gaussian Kernel Parameters
@@ -205,7 +205,7 @@ def main(argv):
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
 
-            scaling_factor = var['scale'] if var['scale'] != 'auto' else get_scale(segmented_cells, target_median_nuclei_size, min_nuclei_size)
+            scaling_factor = scale if scale != 'auto' else get_scale(segmented_cells, target_median_nuclei_size)
             gaussian_stdev = gaussian_sigma / scaling_factor
             min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
             

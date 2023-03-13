@@ -1,24 +1,32 @@
 interseg:
-  FISH_color: green
   inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/THP1_gCEP1_rMycL1_interphase
+  FISH_color: green
 meta_overlay:
-  color_sensitivity: 85
   inpath: du145_red_hsr
+  color_sensitivity: 85
 metaseg:
   inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
 nuclei_fish:
+  inpath: /home/giprasad/test_dataset_3_channel
+
+  # Peak Threshold Parameters
+  normal_threshold: 15
+  intensity_threshold_std_coeff: 2
+  min_cc_size: 7
+  gaussian_sigma: 3
+
+  # Resizing Parameters
+  scale: auto
+  target_median_nuclei_size: 2000
+
+  # Min Cut Segmentation Improvement Parameters
   cell_size_threshold_coeff: 1.25
   flow_limit: 60
-  gaussian_sigma: 3
-  inpath: /home/giprasad/test_dataset_3_channel
-  intensity_threshold_std_coeff: 1
+
+  # Cosmetic Parameters
   line_thickness: 2
-  min_cc_size: 7
-  min_nuclei_size: 1000
+
   min_score: 0.95
   nms_threshold: 0.01
-  normal_threshold: 15
-  nuclei_size_T: 5000
-  scale: auto
+  nuclei_size_T: 500
   scale_ratio: 0.3
-  target_median_nuclei_size: 2000
