@@ -10,8 +10,9 @@ nuclei_fish:
   inpath: /home/giprasad/test_dataset_3_channel
 
   # Peak Threshold Parameters
-  normal_threshold: 15
-  intensity_threshold_std_coeff: 2
+  normal_threshold: 20
+  intensity_threshold_std_coeff: 1
+  min_intensity: 50
   min_cc_size: 7
   gaussian_sigma: 3
 
@@ -25,7 +26,8 @@ nuclei_fish:
 
   # Cosmetic Parameters
   line_thickness: 2
-
+  
+  # NuSeT Parameters
   min_score: 0.95
   nms_threshold: 0.01
   nuclei_size_T: 500

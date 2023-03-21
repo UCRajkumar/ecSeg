@@ -24,6 +24,7 @@ from skimage.measure import label, regionprops, find_contours
 from collections import deque
 from collections import defaultdict
 from tqdm import tqdm
+import functools
 
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
@@ -138,6 +139,22 @@ def segment_min_cut(mask, centers, dist, min_size=100):
     return groups_1 + groups_2
 
 
+def binary_img_to_centers(mask, center_conv):
+    center_ls = []
+    labeled_center_conv = skimage.measure.label(center_conv, connectivity=2)
+    for cell_region in skimage.measure.regionprops(labeled_center_conv):
+        centroid = (np.round(cell_region.centroid)).astype(int)
+        if not mask[centroid[0], centroid[1]]:
+            alternatives = [(i, j) for i, row in enumerate(labeled_center_conv) for j, val in enumerate(row) if val == cell_region.label]
+            alternative = alternatives[random.randint(0, len(alternatives)-1)]
+            assert mask[alternative[0], alternative[1]]
+            print(f"PICKED ALTERNATE CENTROID {centroid} {alternative}")
+            centroid = alternative
+        center_ls.append(centroid)
+    center_ls = list(map(lambda center: tuple(np.round(center).astype(int)), center_ls))
+    return center_ls
+
+
 def get_centers(segmented_cells, min_rad=10, percentile=0):
 #     segmented_cells = 255 * (tf.nn.conv2d(np.expand_dims(segmented_cells.astype(np.int32), (0, 3)), np.ones((3, 3, 1, 1)), strides=1, padding='SAME')[0,...,0].numpy() > 0).astype(np.uint8)
     distance_transformed = cv2.distanceTransform(segmented_cells.astype(np.uint8), cv2.DIST_L1, 3)
@@ -175,7 +192,7 @@ def get_centers(segmented_cells, min_rad=10, percentile=0):
     percentile = np.percentile(distance_transformed[0,1:-1,1:-1,0][grad[0,...,0] > 0], percentile)
     min_rad = max(percentile, min_rad)
     centers = 255 * (distance_transformed[0,1:-1,1:-1,0] >= min_rad)
-    return np.pad(centers, 1)
+    return binary_img_to_centers(segmented_cells, np.pad(centers, 1))
 
 
 def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff):
@@ -183,43 +200,15 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
     areas = [region.area for region in skimage.measure.regionprops(labeled_segmented_cells)]
     expected_cell_size = np.median(areas)
     distance = (-1 + int(np.sqrt(1 + (2 * flow_limit)))) // 2
-#     print(f"DISTANCE: {distance}")
     assert distance > 0
-    # print(f"MAX NUMBER OF EDGES REMOVED: {2 * distance * (distance + 1)}")
-
-    visualization = np.zeros_like(labeled_segmented_cells)
+    
     updated_labeled_segmented_cells = labeled_segmented_cells.copy()
-
     for region in tqdm(skimage.measure.regionprops(labeled_segmented_cells)):
         mask = (labeled_segmented_cells[region.slice] == region.label).astype(int)
         composite, cells = mask, [0]
         if region.area > cell_size_threshold_coeff * expected_cell_size:
-
-            center_conv = get_centers(mask)
-
-            center_ls = []
-
-            labeled_center_conv = skimage.measure.label(center_conv, connectivity=2)
-            for cell_region in skimage.measure.regionprops(labeled_center_conv):
-                centroid = (np.round(cell_region.centroid)).astype(int)
-                if not mask[centroid[0], centroid[1]]:
-                    alternatives = [(i, j) for i, row in enumerate(labeled_center_conv) for j, val in enumerate(row) if val == cell_region.label]
-                    alternative = alternatives[random.randint(0, len(alternatives)-1)]
-                    assert mask[alternative[0], alternative[1]]
-                    print(f"PICKED ALTERNATE CENTROID {centroid} {alternative}")
-                    centroid = alternative
-                center_ls.append(centroid)
-            center_ls = list(map(lambda center: tuple(np.round(center).astype(int)), center_ls))
-            
-            
-            ##### REMOVE LATER
-            center_vis = np.zeros_like(mask)
-            for center in center_ls:
-                center_vis[center] = 1
-
-            composite = mask.copy()
+            center_ls = get_centers(mask)
             if len(center_ls) > 1:
-                composite = np.zeros_like(mask)
                 cells = segment_min_cut(mask, center_ls, dist=distance)
                 updated_labeled_segmented_cells[region.slice] -= mask * region.label
 
@@ -228,19 +217,13 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
                         updated_labeled_segmented_cells[region.slice] += cell * region.label
                     else:
                         num_cells += 1
-                        updated_labeled_segmented_cells[region.slice] += cell * (num_cells)
-                    composite += cell * i
+                        updated_labeled_segmented_cells[region.slice] += cell * (num_cells)            
             
-            
-            
-#             fig, axs = plt.subplots(1, 3, dpi=150)            
-#             axs[0].imshow(np.dstack([mask * 255, center_conv * 255, np.zeros_like(mask)]))
-#             axs[1].imshow(np.dstack([mask * 255, center_vis * 255, np.zeros_like(mask)]))
-#             axs[2].imshow(composite)
-#             for axis in axs:
-#                 axis.axis(False)
-#             plt.show()
-        visualization[region.slice] += (composite * (255 // len(cells)))
+    
+    vis_hash = lambda x, salt='': hash(f"{x}_{salt}") % 256 if x else 0
+    r, g = [np.vectorize(functools.partial(vis_hash, salt=salt))(updated_labeled_segmented_cells) for salt in ('r', 'g')]
+    b = np.vectorize(max)(np.vectorize(min)(384 - r - g, 255), 0) * segmented_cells.astype(bool).astype(int)
+    visualization = np.dstack([r, g, b]).astype(np.uint8)
     assert num_cells == updated_labeled_segmented_cells.max()
     return updated_labeled_segmented_cells, visualization
 

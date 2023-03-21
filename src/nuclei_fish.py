@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import yaml, glob, os, sys
+import yaml, glob, os, sys, datetime, shutil
 import pandas as pd
 import numpy as np
 from utils import *
@@ -167,12 +167,14 @@ def main(argv):
         print("Input folder does not exist. Exiting...")
         sys.exit(2)
      
-    output_folders = ['annotated']
-    for output_folder in output_folders:
-        if(os.path.exists(os.path.join(inpath, output_folder))):
-            pass
-        else:
-            os.mkdir(os.path.join(inpath, output_folder))
+
+    output_folder = f"tmp_{str(datetime.datetime.now())[5:-10].replace(' ', '-')}"
+    if(os.path.exists(os.path.join(inpath, output_folder))):
+        pass
+    else:
+        os.mkdir(os.path.join(inpath, output_folder))
+    shutil.copyfile('config.yaml', os.path.join(inpath, output_folder, 'config.yaml'))
+
 
     image_paths = get_imgs(inpath)
     first_fish = 'green'
@@ -187,7 +189,7 @@ def main(argv):
             path_split = os.path.split(i)
             print("Processing image: ", i)
             img_name = os.path.basename(i)[:-4]
-            annotated_path = os.path.join(inpath, 'annotated', img_name)
+            annotated_path = os.path.join(inpath, output_folder, img_name)
             os.makedirs(annotated_path, exist_ok=True)
             
             if i.endswith('.tif'):
@@ -214,6 +216,7 @@ def main(argv):
             
             # Get Color Sensitivity
             color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+            color_sensitivity = np.vectorize(max)(color_sensitivity, [var['min_intensity']] * len(color_sensitivity))
             
             num_channels = I.shape[-1]
             
@@ -280,16 +283,19 @@ def main(argv):
             
             np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", segmented_cells)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation.tif", segmented_cells_copy)
-            assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", np.dstack([labeled_segmented_cells_visualization]*3).astype(np.uint8))
+            assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original_with_segmentation.tif", img_with_segmentation)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original.tif", I)
             assert cv2.imwrite(image_least_squares_path, blob_labeled_img)
             
         dfs = pd.concat(dfs)
-        dfs.to_csv(os.path.join(path_split[0],  'annotated', 'nuclei_fish_lsq.csv'), index=False)
+        dfs.to_csv(os.path.join(path_split[0],  output_folder, 'nuclei_fish_lsq.csv'), index=False)
         sess1.close()
         sess2.close()
 
+    if os.path.isdir(f"{inpath}/annotated"):
+        os.rename(f"{inpath}/annotated", f"{inpath}/annotated_{str(datetime.datetime.now())[5:-10].replace(' ', '-')}")
+    os.rename(f"{inpath}/{output_folder}", f"{inpath}/annotated")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
