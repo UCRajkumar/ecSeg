@@ -62,31 +62,21 @@ def get_boundary_sum_kernel(gaussian_stdev, kernel_side_size):
     return np.sum((arr[0].sum(), (arr[-1].sum() if arr.shape[0] > 1 else 0), arr[1:-1,0].sum(), arr[1:,-1].sum()))
 
 
-def get_kernel_shape(gaussian_stdev, max_kernel_size=50, sum_thresh=0.1):
-    low, high = 5, max_kernel_size if max_kernel_size % 2 else max_kernel_size+1
-    while low < high:
-        kernel_side_size = (((low + high - 2) // 4) * 2) + 1
-        assert kernel_side_size % 2
-        prev, curr = [get_boundary_sum_kernel(gaussian_stdev, kss) <= sum_thresh for kss in (kernel_side_size-2, kernel_side_size)]
-        if prev and curr:
-            high = kernel_side_size
-        elif not prev and not curr:
-            low = kernel_side_size + 2
-        else:
-            return (kernel_side_size, kernel_side_size)
-    raise AssertionError
-
-
-def get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity):
-    gaussian_kernel_shape = get_kernel_shape(gaussian_stdev)  
+def get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape):
     g_kernel_perp = get_gaussian_proj_kernel(gaussian_kernel_shape, gaussian_stdev)
     num_channels = I.shape[-1]
     inter = np.expand_dims([I[...,channel] for channel in range(1, num_channels)], -1).astype(np.float64)
     normal_coefficients = tf.nn.conv2d(inter, g_kernel_perp, strides=1, padding="SAME").eval(session=tf.compat.v1.Session())
     assert normal_coefficients.shape[-1] == 1
     normal_coefficients = np.dstack(normal_coefficients[...,0])
-    thresholded = ((normal_coefficients > normal_threshold) * (I[...,1:] > color_sensitivity)).astype(int)
+
+    # If pixel is max brightness or is brighter than neighbors, classify as center
+    max_pixels = np.dstack([(channel == channel.max()) * bool(channel.max()) for channel in inter]).astype(int)
+    centers = ((normal_coefficients > normal_threshold) + max_pixels).astype(bool)
+
+    thresholded = (centers * (I[...,1:] > color_sensitivity)).astype(int)
     thresholded *= np.dstack([segmented_cells] * (num_channels - 1))
+
     return thresholded
 
 
@@ -126,10 +116,11 @@ def cell_splice_segmentation(i, thresh, s, region):
 
 
 
-def get_scale(segmented_cells, target_median_nuclei_size):
-    areas = [nuclei.area for nuclei in measure.regionprops(scipy.ndimage.label(segmented_cells)[0])]
+def get_scale(labeled_segmented_cells, target_median_nuclei_size):
+    areas = [nuclei.area for nuclei in measure.regionprops(labeled_segmented_cells)]
     median_size = np.median(areas)
     scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
+    print(f"Scale: {scaling_factor}")
     return scaling_factor
 
 
@@ -141,11 +132,14 @@ def main(argv):
     
     # Intensity and Normal Distribution Scaled Thresholds
     normal_threshold = var['normal_threshold']
-    intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
+    # intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
+    color_sensitivity = var['color_sensitivity']
+
         
     # Image Resizing Parameters
-    scale = var['scale']
+    scaling_factor = var['scale']
     target_median_nuclei_size = var["target_median_nuclei_size"]
+    kernel_shape = var['kernel_size']
 
     # Gaussian Kernel Parameters
     gaussian_sigma = var['gaussian_sigma']
@@ -162,13 +156,14 @@ def main(argv):
     flow_limit = var['flow_limit']
     cell_size_threshold_coeff = var['cell_size_threshold_coeff']
 
+
     #check input parameters
     if(os.path.isdir(os.path.join(inpath)) == False):
         print("Input folder does not exist. Exiting...")
         sys.exit(2)
      
 
-    output_folder = f"tmp_{str(datetime.datetime.now())[5:-10].replace(' ', '-')}"
+    output_folder = f"tmp_{datetime.datetime.now().strftime('%m-%d_%H:%M:%S')}"
     if(os.path.exists(os.path.join(inpath, output_folder))):
         pass
     else:
@@ -207,24 +202,25 @@ def main(argv):
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
 
-            scaling_factor = scale if scale != 'auto' else get_scale(segmented_cells, target_median_nuclei_size)
+            # color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+
+            labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
+            # labeled_segmented_cells = np.load('/home/giprasad/test_dataset_3_channel/annotated/HER2_727PDX_001/HER2_727PDX_001__segmentation_min_cut.npy')
+            # labeled_segmented_cells_visualization = cv2.imread('/home/giprasad/test_dataset_3_channel/annotated/HER2_727PDX_001/HER2_727PDX_001_segmentation_corrected_min_cut.tif')
+            regions = measure.regionprops(labeled_segmented_cells)
+            
+            scaling_factor = scaling_factor if scaling_factor != 'auto' else get_scale(labeled_segmented_cells, target_median_nuclei_size)
             gaussian_stdev = gaussian_sigma / scaling_factor
             min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
-            
-            new_shape = np.round(scaling_factor * np.array(segmented_cells.shape)).astype(int)
+            gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]            
             segmented_cells_copy = segmented_cells.copy()
-            
-            # Get Color Sensitivity
-            color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
-            color_sensitivity = np.vectorize(max)(color_sensitivity, [var['min_intensity']] * len(color_sensitivity))
-            
+
             num_channels = I.shape[-1]
             
-            thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity)
+            thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
-            segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
-            regions = measure.regionprops(segmented_cells)
+
     
             names = []; cell_sizes = []; centroids = []; 
             
@@ -234,10 +230,10 @@ def main(argv):
             print('Number of regions: ', len(regions))
             
             for region in regions:
-                raw_cell, thresh_cell, cell_seg, (y_splice, x_splice) = cell_splice_segmentation(I, thresholded, segmented_cells, region)
+                raw_cell, thresh_cell, cell_seg, (y_splice, x_splice) = cell_splice_segmentation(I, thresholded, labeled_segmented_cells, region)
                 fish = [thresh_cell[...,channel] for channel in range(num_channels-1)]
                 raw_fish = [raw_cell[...,channel].astype(np.int64) * cell_seg for channel in range(1, num_channels)]
-                for raw_fish_ch, avg_fish_ch, max_fish_ch, fish_sizes_ch, fish_blobs_ch, fish_splice in zip(raw_fish, avg_fish, max_fish, fish_sizes, fish_blobs, fish):         
+                for raw_fish_ch, avg_fish_ch, max_fish_ch, fish_sizes_ch, fish_blobs_ch, fish_splice, color_sensitivity_ch in zip(raw_fish, avg_fish, max_fish, fish_sizes, fish_blobs, fish, color_sensitivity):         
                     labeled_array, blob_count = scipy.ndimage.measurements.label(fish_splice * cell_seg)
                     for blob in measure.regionprops(labeled_array):
                         if blob.area < min_cc_size:
@@ -272,7 +268,7 @@ def main(argv):
             
             thresholds_abbreviation = '_'.join([f"{letter}{format(x, '.1f')}" for letter, x in zip(['g', 'r', 'aq'], color_sensitivity)])
             image_least_squares_path = f"{annotated_path}/{img_name}_lsq_n{normal_threshold}_std{format(gaussian_stdev, '.2f')}_s{min_cc_size}_{thresholds_abbreviation}.tif"
-            boundaries = get_boundaries(segmented_cells, line_thickness=line_thickness)
+            boundaries = get_boundaries(labeled_segmented_cells, line_thickness=line_thickness)
             
             I = merge_channels(I, aqua_rgb).astype(np.uint8)
             img_with_segmentation = np.minimum(I + boundaries, 255).astype(np.uint8)
@@ -281,7 +277,7 @@ def main(argv):
                 blob_labeled_img = merge_channels(blob_labeled_img, aqua_rgb)
             blob_labeled_img = blob_labeled_img.astype(np.uint8)
             
-            np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", segmented_cells)
+            np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", labeled_segmented_cells)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation.tif", segmented_cells_copy)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original_with_segmentation.tif", img_with_segmentation)

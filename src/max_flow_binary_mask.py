@@ -189,6 +189,9 @@ def get_centers(segmented_cells, min_rad=10, percentile=0):
     grad.append(distance_transformed[0,1:-1,1:-1,0] > min_rad)
     grad = np.expand_dims(np.prod(np.array(grad), axis=0), (0, 3)).astype(np.int32)
     
+    if not (grad[0,...,0] > 0).any():
+        print("ERROR: No Centers Found in Current Cell")
+        return []
     percentile = np.percentile(distance_transformed[0,1:-1,1:-1,0][grad[0,...,0] > 0], percentile)
     min_rad = max(percentile, min_rad)
     centers = 255 * (distance_transformed[0,1:-1,1:-1,0] >= min_rad)
