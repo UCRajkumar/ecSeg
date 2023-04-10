@@ -7,7 +7,7 @@ meta_overlay:
 metaseg:
   inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
 nuclei_fish:
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/220124_ColoDM_MYC_Red
+  inpath: /home/giprasad/test_dataset_3_channel
 
   # Peak Threshold Parameters
   normal_threshold: 15
@@ -25,7 +25,7 @@ nuclei_fish:
   # NuSeT Parameters
   min_score: 0.95
   nms_threshold: 0.01
-  nuclei_size_T: 5000
+  nuclei_size_T: 500
   scale_ratio: 0.3
 
   # Normalized Nuclei FISH Parameters (Scaled)
@@ -33,3 +33,9 @@ nuclei_fish:
   gaussian_sigma: 3
   kernel_size: [7, 7]
   target_median_nuclei_size: 2500
+
+fish_distance_calculation:
+  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/HCC827_gCON7_rEGFR_interphase
+  centromere_probe_color: green
+  fish_probe_color: red
+  max_centromeric_spots: 3
