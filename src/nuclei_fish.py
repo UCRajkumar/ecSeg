@@ -25,7 +25,7 @@ def scipy_sampled_gaussian_kernel(kernel_shape, sigma=1):
     
     centers = (kernel_shape / 2) - 0.5
     kernel_axis_y, kernel_axis_x = [np.arange(kernel_axis_size) - center for kernel_axis_size, center in zip(kernel_shape, centers)]
-    grid = np.linalg.norm(np.dstack(np.meshgrid(kernel_axis_x, kernel_axis_x)), axis=2).astype(np.float64)
+    grid = np.linalg.norm(np.dstack(np.meshgrid(kernel_axis_x, kernel_axis_y)), axis=2).astype(np.float64)
     gaussian = scipy.stats.norm.pdf(grid, scale=sigma)
     return gaussian / gaussian.sum()
 
