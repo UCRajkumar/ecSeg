@@ -1,17 +1,16 @@
 interseg:
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/THP1_gCEP1_rMycL1_interphase
+  inpath: ../im2
   FISH_color: green
 meta_overlay:
   inpath: du145_red_hsr
   color_sensitivity: 85
 metaseg:
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/SNU16_gCEP10_rFGFR2
+  inpath: ../im2
 nuclei_fish:
-  inpath: /home/giprasad/test_dataset_3_channel
+  inpath: ../im2
 
   # Peak Threshold Parameters
   normal_threshold: 15
-  # intensity_threshold_std_coeff: 1.25
   color_sensitivity: [100, 100]
   scale: auto
 
@@ -35,7 +34,7 @@ nuclei_fish:
   target_median_nuclei_size: 2500
 
 fish_distance_calculation:
-  inpath: /home/giprasad/Siavash_ecSeg_Analysis/scratch/HCC827_gCON7_rEGFR_interphase
+  inpath: ../im2
   centromere_probe_color: green
   fish_probe_color: red
   max_centromeric_spots: 3
