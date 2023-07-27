@@ -1,22 +1,22 @@
 interseg:
-  inpath: ../images/patient_tissue2\README.txt
-  FISH_color: red
+  inpath: ../im2
+  FISH_color: green
 meta_overlay:
   inpath: du145_red_hsr
   color_sensitivity: 85
 metaseg:
-  inpath: du145_red_hsr
+  inpath: ../im2
 nuclei_fish:
   inpath: ../im2
 
   # Peak Threshold Parameters
   normal_threshold: 15
-  intensity_threshold_std_coeff: 1
-  min_cc_size: 9
+  color_sensitivity: [100, 100]
+  scale: auto
 
-  # Gaussian Kernel Parameters
-  gaussian_kernel_shape: [7, 7]
-  gaussian_sigma: 3
+  # Min Cut Segmentation Improvement Parameters
+  cell_size_threshold_coeff: 1.25
+  flow_limit: 60
 
   # Cosmetic Parameters
   line_thickness: 2
@@ -26,3 +26,15 @@ nuclei_fish:
   nms_threshold: 0.01
   nuclei_size_T: 500
   scale_ratio: 0.3
+
+  # Normalized Nuclei FISH Parameters (Scaled)
+  min_cc_size: 7
+  gaussian_sigma: 3
+  kernel_size: [7, 7]
+  target_median_nuclei_size: 2500
+
+fish_distance_calculation:
+  inpath: ../im2
+  centromere_probe_color: green
+  fish_probe_color: red
+  max_centromeric_spots: 3
