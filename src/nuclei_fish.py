@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import yaml, glob, os, sys
+import yaml, glob, os, sys, datetime, shutil
 import pandas as pd
 import numpy as np
 from utils import *
+import max_flow_binary_mask
 from image_tools import *
 import seaborn as sns
 from skimage import *
@@ -24,7 +25,7 @@ def scipy_sampled_gaussian_kernel(kernel_shape, sigma=1):
     
     centers = (kernel_shape / 2) - 0.5
     kernel_axis_y, kernel_axis_x = [np.arange(kernel_axis_size) - center for kernel_axis_size, center in zip(kernel_shape, centers)]
-    grid = np.linalg.norm(np.dstack(np.meshgrid(kernel_axis_x, kernel_axis_x)), axis=2).astype(np.float64)
+    grid = np.linalg.norm(np.dstack(np.meshgrid(kernel_axis_x, kernel_axis_y)), axis=2).astype(np.float64)
     gaussian = scipy.stats.norm.pdf(grid, scale=sigma)
     return gaussian / gaussian.sum()
 
@@ -56,14 +57,26 @@ def get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff):
     return color_sensitivity
 
 
-def get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_sensitivity):
+def get_boundary_sum_kernel(gaussian_stdev, kernel_side_size):
+    arr = scipy_sampled_gaussian_kernel((kernel_side_size, kernel_side_size), gaussian_stdev)
+    return np.sum((arr[0].sum(), (arr[-1].sum() if arr.shape[0] > 1 else 0), arr[1:-1,0].sum(), arr[1:,-1].sum()))
+
+
+def get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape):
+    g_kernel_perp = get_gaussian_proj_kernel(gaussian_kernel_shape, gaussian_stdev)
     num_channels = I.shape[-1]
     inter = np.expand_dims([I[...,channel] for channel in range(1, num_channels)], -1).astype(np.float64)
     normal_coefficients = tf.nn.conv2d(inter, g_kernel_perp, strides=1, padding="SAME").eval(session=tf.compat.v1.Session())
     assert normal_coefficients.shape[-1] == 1
     normal_coefficients = np.dstack(normal_coefficients[...,0])
-    thresholded = ((normal_coefficients > normal_threshold) * (I[...,1:] > color_sensitivity)).astype(int)
+
+    # If pixel is max brightness or is brighter than neighbors, classify as center
+    max_pixels = np.dstack([(channel == channel.max()) * bool(channel.max()) for channel in inter]).astype(int)
+    centers = ((normal_coefficients > normal_threshold) + max_pixels).astype(bool)
+
+    thresholded = (centers * (I[...,1:] > color_sensitivity)).astype(int)
     thresholded *= np.dstack([segmented_cells] * (num_channels - 1))
+
     return thresholded
 
 
@@ -102,6 +115,15 @@ def cell_splice_segmentation(i, thresh, s, region):
     return img_splice, thresh_splice, seg_splice, (y_splice, x_splice)
 
 
+
+def get_scale(labeled_segmented_cells, target_median_nuclei_size):
+    areas = [nuclei.area for nuclei in measure.regionprops(labeled_segmented_cells)]
+    median_size = np.median(areas)
+    scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
+    print(f"Scale: {scaling_factor}")
+    return scaling_factor
+
+
 def main(argv):
     config = open("config.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['nuclei_fish']
@@ -110,17 +132,18 @@ def main(argv):
     
     # Intensity and Normal Distribution Scaled Thresholds
     normal_threshold = var['normal_threshold']
-    intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
-    
-    # Minimum pixels for valid connected component
-    min_cc_size = var['min_cc_size']
-    
-    # Gaussian Kernel Parameters
-    gaussian_kernel_shape = var['gaussian_kernel_shape']
-    gaussian_sigma = var['gaussian_sigma']
-    g_kernel_perp = get_gaussian_proj_kernel(gaussian_kernel_shape, gaussian_sigma)
+    # intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
+    color_sensitivity = var['color_sensitivity']
 
-    
+        
+    # Image Resizing Parameters
+    scaling_factor = var['scale']
+    target_median_nuclei_size = var["target_median_nuclei_size"]
+    kernel_shape = var['kernel_size']
+
+    # Gaussian Kernel Parameters
+    gaussian_sigma = var['gaussian_sigma']
+
     # Cosmetic: thickness of segmentation lines
     line_thickness = var['line_thickness']
     aqua_rgb = [233, 137, 54]
@@ -130,18 +153,23 @@ def main(argv):
     nms_thresh = var['nms_threshold']
     resize_scale = var['scale_ratio']
     nuclei_size_t = var['nuclei_size_T']
+    flow_limit = var['flow_limit']
+    cell_size_threshold_coeff = var['cell_size_threshold_coeff']
+
 
     #check input parameters
     if(os.path.isdir(os.path.join(inpath)) == False):
         print("Input folder does not exist. Exiting...")
         sys.exit(2)
      
-    output_folders = ['annotated']
-    for output_folder in output_folders:
-        if(os.path.exists(os.path.join(inpath, output_folder))):
-            pass
-        else:
-            os.mkdir(os.path.join(inpath, output_folder))
+
+    output_folder = f"tmp_{datetime.datetime.now().strftime('%m-%d_%H:%M:%S')}"
+    if(os.path.exists(os.path.join(inpath, output_folder))):
+        pass
+    else:
+        os.mkdir(os.path.join(inpath, output_folder))
+    shutil.copyfile('config.yaml', os.path.join(inpath, output_folder, 'config.yaml'))
+
 
     image_paths = get_imgs(inpath)
     first_fish = 'green'
@@ -156,7 +184,7 @@ def main(argv):
             path_split = os.path.split(i)
             print("Processing image: ", i)
             img_name = os.path.basename(i)[:-4]
-            annotated_path = os.path.join(inpath, 'annotated', img_name)
+            annotated_path = os.path.join(inpath, output_folder, img_name)
             os.makedirs(annotated_path, exist_ok=True)
             
             if i.endswith('.tif'):
@@ -168,21 +196,31 @@ def main(argv):
             blue = I[:,:,0]
 
             segmented_cells = nuclei_segment(blue, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, nuclei_size_t)
-            segmented_cells_copy = segmented_cells.copy()
             
+            if not segmented_cells.any():
+                continue
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
 
-            # Get Color Sensitivity
-            color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+            # color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+
+            labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
+            # labeled_segmented_cells = np.load('/home/giprasad/test_dataset_3_channel/annotated/HER2_727PDX_001/HER2_727PDX_001__segmentation_min_cut.npy')
+            # labeled_segmented_cells_visualization = cv2.imread('/home/giprasad/test_dataset_3_channel/annotated/HER2_727PDX_001/HER2_727PDX_001_segmentation_corrected_min_cut.tif')
+            regions = measure.regionprops(labeled_segmented_cells)
             
+            scaling_factor = scaling_factor if scaling_factor != 'auto' else get_scale(labeled_segmented_cells, target_median_nuclei_size)
+            gaussian_stdev = gaussian_sigma / scaling_factor
+            min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
+            gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]            
+            segmented_cells_copy = segmented_cells.copy()
+
             num_channels = I.shape[-1]
             
-            thresholded = get_thresholded(I, segmented_cells, g_kernel_perp, normal_threshold, color_sensitivity)
+            thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
-            segmented_cells = measure.label(segmented_cells)
-            regions = measure.regionprops(segmented_cells)
+
     
             names = []; cell_sizes = []; centroids = []; 
             
@@ -192,10 +230,10 @@ def main(argv):
             print('Number of regions: ', len(regions))
             
             for region in regions:
-                raw_cell, thresh_cell, cell_seg, (y_splice, x_splice) = cell_splice_segmentation(I, thresholded, segmented_cells, region)
+                raw_cell, thresh_cell, cell_seg, (y_splice, x_splice) = cell_splice_segmentation(I, thresholded, labeled_segmented_cells, region)
                 fish = [thresh_cell[...,channel] for channel in range(num_channels-1)]
                 raw_fish = [raw_cell[...,channel].astype(np.int64) * cell_seg for channel in range(1, num_channels)]
-                for raw_fish_ch, avg_fish_ch, max_fish_ch, fish_sizes_ch, fish_blobs_ch, fish_splice in zip(raw_fish, avg_fish, max_fish, fish_sizes, fish_blobs, fish):         
+                for raw_fish_ch, avg_fish_ch, max_fish_ch, fish_sizes_ch, fish_blobs_ch, fish_splice, color_sensitivity_ch in zip(raw_fish, avg_fish, max_fish, fish_sizes, fish_blobs, fish, color_sensitivity):         
                     labeled_array, blob_count = scipy.ndimage.measurements.label(fish_splice * cell_seg)
                     for blob in measure.regionprops(labeled_array):
                         if blob.area < min_cc_size:
@@ -229,8 +267,8 @@ def main(argv):
             dfs.append(df)
             
             thresholds_abbreviation = '_'.join([f"{letter}{format(x, '.1f')}" for letter, x in zip(['g', 'r', 'aq'], color_sensitivity)])
-            image_least_squares_path = f"{annotated_path}/{img_name}_lsq_n{normal_threshold}_s{min_cc_size}_{thresholds_abbreviation}.tif"
-            boundaries = get_boundaries(segmented_cells, line_thickness=line_thickness)
+            image_least_squares_path = f"{annotated_path}/{img_name}_lsq_n{normal_threshold}_std{format(gaussian_stdev, '.2f')}_s{min_cc_size}_{thresholds_abbreviation}.tif"
+            boundaries = get_boundaries(labeled_segmented_cells, line_thickness=line_thickness)
             
             I = merge_channels(I, aqua_rgb).astype(np.uint8)
             img_with_segmentation = np.minimum(I + boundaries, 255).astype(np.uint8)
@@ -239,16 +277,21 @@ def main(argv):
                 blob_labeled_img = merge_channels(blob_labeled_img, aqua_rgb)
             blob_labeled_img = blob_labeled_img.astype(np.uint8)
             
+            np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", labeled_segmented_cells)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation.tif", segmented_cells_copy)
-            assert cv2.imwrite(f"{annotated_path}/{img_name}_with_segmentation.tif", img_with_segmentation)
+            assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
+            assert cv2.imwrite(f"{annotated_path}/{img_name}_original_with_segmentation.tif", img_with_segmentation)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original.tif", I)
             assert cv2.imwrite(image_least_squares_path, blob_labeled_img)
             
         dfs = pd.concat(dfs)
-        dfs.to_csv(os.path.join(path_split[0],  'annotated', 'nuclei_fish_lsq.csv'), index=False)
+        dfs.to_csv(os.path.join(path_split[0],  output_folder, 'nuclei_fish_lsq.csv'), index=False)
         sess1.close()
         sess2.close()
 
+    if os.path.isdir(f"{inpath}/annotated"):
+        os.rename(f"{inpath}/annotated", f"{inpath}/annotated_{str(datetime.datetime.now())[5:-10].replace(' ', '-')}")
+    os.rename(f"{inpath}/{output_folder}", f"{inpath}/annotated")
 
 if __name__ == "__main__":
     main(sys.argv[1:])
