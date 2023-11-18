@@ -123,10 +123,19 @@ def get_scale(labeled_segmented_cells, target_median_nuclei_size):
     print(f"Scale: {scaling_factor}")
     return scaling_factor
 
+def count_blobs(fish_splice, cell_seg, min_cc_size):
+    labeled_array, blob_count = scipy.ndimage.measurements.label(fish_splice * cell_seg)
+    for blob in measure.regionprops(labeled_array):
+        if blob.area < min_cc_size:
+            blob_y_splice, blob_x_splice = blob.slice
+            component = (labeled_array[blob_y_splice.start:blob_y_splice.stop, blob_x_splice.start:blob_x_splice.stop] == blob.label).astype(int)
+            fish_splice[blob_y_splice.start:blob_y_splice.stop, blob_x_splice.start:blob_x_splice.stop] -= 255 * component
+            blob_count -= 1
+    return blob_count
 
 def main(argv):
     config = open("config.yaml")
-    var = yaml.load(config, Loader=yaml.FullLoader)['nuclei_fish']
+    var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
     
     inpath = var['inpath']
     
@@ -205,8 +214,7 @@ def main(argv):
             # color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
 
             labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
-            # labeled_segmented_cells = np.load('/home/giprasad/test_dataset_3_channel/annotated/HER2_727PDX_001/HER2_727PDX_001__segmentation_min_cut.npy')
-            # labeled_segmented_cells_visualization = cv2.imread('/home/giprasad/test_dataset_3_channel/annotated/HER2_727PDX_001/HER2_727PDX_001_segmentation_corrected_min_cut.tif')
+            
             regions = measure.regionprops(labeled_segmented_cells)
             
             scaling_factor = scaling_factor if scaling_factor != 'auto' else get_scale(labeled_segmented_cells, target_median_nuclei_size)
@@ -222,7 +230,7 @@ def main(argv):
 
 
     
-            names = []; cell_sizes = []; centroids = []; 
+            names = []; cell_sizes = []; centroids = [];  green_red_pixels = []; green_red_blobs = []
             
             fish_sizes, fish_blobs, avg_fish, max_fish = [[[] for _ in range(num_channels-1)] for _ in range(4)]
             df = pd.DataFrame()
@@ -234,15 +242,11 @@ def main(argv):
                 fish = [thresh_cell[...,channel] for channel in range(num_channels-1)]
                 raw_fish = [raw_cell[...,channel].astype(np.int64) * cell_seg for channel in range(1, num_channels)]
                 for raw_fish_ch, avg_fish_ch, max_fish_ch, fish_sizes_ch, fish_blobs_ch, fish_splice, color_sensitivity_ch in zip(raw_fish, avg_fish, max_fish, fish_sizes, fish_blobs, fish, color_sensitivity):         
-                    labeled_array, blob_count = scipy.ndimage.measurements.label(fish_splice * cell_seg)
-                    for blob in measure.regionprops(labeled_array):
-                        if blob.area < min_cc_size:
-                            blob_y_splice, blob_x_splice = blob.slice
-                            component = (labeled_array[blob_y_splice.start:blob_y_splice.stop, blob_x_splice.start:blob_x_splice.stop] == blob.label).astype(int)
-                            fish_splice[blob_y_splice.start:blob_y_splice.stop, blob_x_splice.start:blob_x_splice.stop] -= 255 * component
-                            blob_count -= 1
+                    
+                    blob_count = count_blobs(fish_splice, cell_seg, min_cc_size)
+                    
                     fish_blobs_ch.append(blob_count)
-                    fish_pixels = np.sum(fish_splice * cell_seg) / 255
+                    fish_pixels = (fish_splice * cell_seg).sum() / 255
                     assert fish_pixels == int(fish_pixels)
                     fish_sizes_ch.append(int(fish_pixels))
                     avg_fish_intensity, max_fish_intensity = intensity_metrics(raw_fish_ch)
@@ -253,17 +257,24 @@ def main(argv):
                 center = region.centroid
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 names.append(path_split[-1][:-4])
+                
+                green_red_splice = fish[0] * fish[1]
+                blob_count = count_blobs(green_red_splice, cell_seg, min_cc_size)
+                green_red_pixels.append((green_red_splice * cell_seg).sum() / 255)
+                green_red_blobs.append(blob_count)
 
             df['image_name'] = np.array(names)
             df['nucleus_center'] = np.array(centroids)
             
             for channel_name, fish_sizes_ch, fish_blobs_ch, avg_fish_ch, max_fish_ch in zip((first_fish, second_fish, third_fish), fish_sizes, fish_blobs, avg_fish, max_fish): 
                 df[f'#_FISH_pixels ({channel_name})'] = np.array(fish_sizes_ch)
-                df[f'#_FISH_blobs ({channel_name})'] = np.array(fish_blobs_ch)
+                df[f'#_FISH_foci ({channel_name})'] = np.array(fish_blobs_ch)
                 df[f'Avg fish intensity ({channel_name})'] = np.array(avg_fish_ch)
                 df[f'Max fish intensity ({channel_name})'] = np.array(max_fish_ch)
 
             df['#_DAPI_pixels'] = np.array(cell_sizes)
+            df[f'#_FISH_pixels (green and red))'] = np.array(green_red_pixels)
+            df[f'#_FISH_foci (green and red)'] = np.array(green_red_blobs)
             dfs.append(df)
             
             thresholds_abbreviation = '_'.join([f"{letter}{format(x, '.1f')}" for letter, x in zip(['g', 'r', 'aq'], color_sensitivity)])
@@ -285,7 +296,7 @@ def main(argv):
             assert cv2.imwrite(image_least_squares_path, blob_labeled_img)
             
         dfs = pd.concat(dfs)
-        dfs.to_csv(os.path.join(path_split[0],  output_folder, 'nuclei_fish_lsq.csv'), index=False)
+        dfs.to_csv(os.path.join(path_split[0],  output_folder, 'stat_fish_lsq.csv'), index=False)
         sess1.close()
         sess2.close()
 

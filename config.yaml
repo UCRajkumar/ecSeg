@@ -6,12 +6,12 @@ meta_overlay:
   color_sensitivity: 85
 metaseg:
   inpath: ../im2
-nuclei_fish:
+stat_fish:
   inpath: ../im2
 
   # Peak Threshold Parameters
   normal_threshold: 15
-  color_sensitivity: [100, 100]
+  color_sensitivity: [70, 70]
   scale: auto
 
   # Min Cut Segmentation Improvement Parameters
