@@ -9,8 +9,8 @@ metaseg:
 meta_overlay:
 	python src/meta_overlay.py
 
-nuclei_fish:
-	python src/nuclei_fish.py
+stat_fish:
+	python src/stat_fish.py
 
 fish_distance_calculation:
 	python src/fish_distance_calculation.py

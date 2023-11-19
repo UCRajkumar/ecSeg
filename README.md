@@ -94,7 +94,7 @@ color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) 
     5. “# of HSR (FISH)” - # of homogeneously stained regions based on FISH_color.
 
 
-### `make nuclei_fish`
+### `make stat_fish`
 
 Identifies nuclei in the image and analyzes ratio of fish to dapi pixels. Provides rough approximation of oncogene amplification per cell in interphase images. Supports green and red FISH. 
 
@@ -112,11 +112,18 @@ ecseg
 |  |  ...
 ```
 
-Set parameters in config.yaml under `nuclei_fish`:
+Set parameters in config.yaml under `stat_fish`:
 
 ````
 inpath : path to folder containing images
-color_sensitivity : Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
+
+normal_threshold: Local Brightness Threshold (Recommended value: 15)
+color_sensitivity: Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
+scale: average square root of ratio of nuclei size relative to target_median_nuclei_size (Recommended value: auto)
+  
+cell_size_threshold_coeff: Minimum (nuclei size / median nuclei size) to consider for min-cut refinement (Recommended value: 1.25)
+flow_limit: Min-cut algorithm threshold to seperate neighboring nuclei (Recommended value: 60)
+
 min_score : 0.95
 nms_threshold : Threshold to suppress oversegmentation. (Recommended value: 0.01)
 scale_ratio : Ratio of cell size to image size. (Recommended value: 0.4)
@@ -128,7 +135,7 @@ Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
 
 #### Output
 
-1. **nuclei_fish.csv** - Each row represents a single nucleus. Column headers are as follows:
+1. **stat_fish_lsq.csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
     2. “nuclei_center” - Center of each nucleus
     3. “#_FISH_pixels (FISH_color)" - # of FISH pixels inside nucleus
@@ -136,10 +143,15 @@ Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
     5. “Avg fish intensity (FISH_color)" - Avg intensity of the corresponding FISH pixels inside nucleus
     6. “Max fish intensity (FISH_color)" - Max intensity of the corresponding FISH pixels inside nucleus
     7. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
-2. **nuclei/plots/hist_FISH_blobs (green).png**
-    1. Histogram of # of green fish blobs per cell across all images in the folder.
-3. **nuclei/plots/hist_FISH_blobs (red).png**
-    1. Histogram of # of red fish blobs per cell across all images in the folder.
+
+1. **annotated/img_name/img_name_lsq.tif**
+    1. Visualization of fish foci calls for each fish probe with cell segmentation.
+2. **annotated/img_name/img_name_original_with_segmentation.tif**
+    1. Visualization of nuclei segmentation outline overlayed with original image.
+3. **annotated/img_name/img_name_segmentation.tif**
+    1. NuSet Binary Segmentation visualization.
+4. **annotated/img_name/img_name_segmentation_corrected_min_cut.tif**
+    1. NuSet Binary Segmentation after Min Cut algorithm refinement, where each color represents a distinct nuclei.
 
 
 ### `make interseg`
