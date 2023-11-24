@@ -258,9 +258,9 @@ def main(argv):
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 names.append(path_split[-1][:-4])
                 
-                green_red_splice = fish[0] * fish[1]
+                green_red_splice = (fish[0] / 255) * (fish[1] / 255)
                 blob_count = count_blobs(green_red_splice, cell_seg, min_cc_size)
-                green_red_pixels.append((green_red_splice * cell_seg).sum() / 255)
+                green_red_pixels.append((green_red_splice * cell_seg).sum()
                 green_red_blobs.append(blob_count)
 
             df['image_name'] = np.array(names)
@@ -273,7 +273,7 @@ def main(argv):
                 df[f'Max fish intensity ({channel_name})'] = np.array(max_fish_ch)
 
             df['#_DAPI_pixels'] = np.array(cell_sizes)
-            df[f'#_FISH_pixels (green and red))'] = np.array(green_red_pixels)
+            df[f'#_FISH_pixels (green and red)'] = np.array(green_red_pixels)
             df[f'#_FISH_foci (green and red)'] = np.array(green_red_blobs)
             dfs.append(df)
             
