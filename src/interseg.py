@@ -7,6 +7,7 @@ from image_tools import *
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 from scipy import ndimage as ndi
+from pathlib import Path
 from skimage import *
 
 import warnings
@@ -46,6 +47,7 @@ def main(argv):
 
     config = open("config.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['interseg']
+    Path("README.md").touch()
     inpath = var['inpath']
     fish_color = var['FISH_color'].lower()
 

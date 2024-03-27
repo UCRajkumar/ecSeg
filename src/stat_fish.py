@@ -8,6 +8,7 @@ from image_tools import *
 import seaborn as sns
 from skimage import *
 import scipy.stats
+from pathlib import Path
 import cv2
 
 import warnings
@@ -135,7 +136,9 @@ def count_blobs(fish_splice, cell_seg, min_cc_size):
 
 def main(argv):
     config = open("config.yaml")
+    
     var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
+    Path("README.md").touch()
     
     inpath = var['inpath']
     
@@ -212,9 +215,11 @@ def main(argv):
             I = I[:imheight,:imwidth,:]
 
             # color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+            if var['use_min_cut']:
+                labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
+            else:
+                labeled_segmented_cells = measure.label(segmented_cells)
 
-            labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
-            
             regions = measure.regionprops(labeled_segmented_cells)
             
             scaling_factor = scaling_factor if scaling_factor != 'auto' else get_scale(labeled_segmented_cells, target_median_nuclei_size)
@@ -292,7 +297,8 @@ def main(argv):
             
             np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", labeled_segmented_cells)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation.tif", segmented_cells_copy)
-            assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
+            if var['use_min_cut']:
+                assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original_with_segmentation.tif", img_with_segmentation)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original.tif", I)
             assert cv2.imwrite(image_least_squares_path, blob_labeled_img)

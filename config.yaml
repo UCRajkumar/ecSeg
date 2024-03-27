@@ -1,13 +1,13 @@
 interseg:
-  inpath: ../im2
-  FISH_color: green
+  inpath: /home/giprasad/ecseg_paper/concat_experiment_v3
+  FISH_color: red
 meta_overlay:
   inpath: du145_red_hsr
   color_sensitivity: 85
 metaseg:
-  inpath: ../im2
+  inpath: /home/giprasad/test_dataset_3_channel
 stat_fish:
-  inpath: ../im2
+  inpath: /home/giprasad/ecseg_paper/concat_experiment_v3
 
   # Peak Threshold Parameters
   normal_threshold: 15
@@ -15,6 +15,7 @@ stat_fish:
   scale: auto
 
   # Min Cut Segmentation Improvement Parameters
+  use_min_cut: False
   cell_size_threshold_coeff: 1.25
   flow_limit: 60
 
