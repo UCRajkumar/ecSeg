@@ -87,7 +87,7 @@ def main(argv):
         imheight, imwidth = segmented_cells.shape
         I = I[:imheight, :imwidth, fish_index]
 
-        segmented_cells = measure.label(segmented_cells)
+        segmented_cells = measure.label(segmented_cells, connectivity=1)
         regions = measure.regionprops(segmented_cells)
 
         centroids = []; predictions = []; names = []
