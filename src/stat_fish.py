@@ -136,7 +136,6 @@ def count_blobs(fish_splice, cell_seg, min_cc_size):
 
 def main(argv):
     config = open("config.yaml")
-    
     var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
     Path("README.md").touch()
     
@@ -209,8 +208,6 @@ def main(argv):
 
             segmented_cells = nuclei_segment(blue, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, nuclei_size_t)
             
-            if not segmented_cells.any():
-                continue
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
 
@@ -218,23 +215,25 @@ def main(argv):
             if var['use_min_cut']:
                 labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
             else:
-                labeled_segmented_cells = measure.label(segmented_cells)
+                labeled_segmented_cells = measure.label(segmented_cells, connectivity=None)
 
             regions = measure.regionprops(labeled_segmented_cells)
             
             scaling_factor = scaling_factor if scaling_factor != 'auto' else get_scale(labeled_segmented_cells, target_median_nuclei_size)
-            gaussian_stdev = gaussian_sigma / scaling_factor
-            min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
-            gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]            
-            segmented_cells_copy = segmented_cells.copy()
-
-            num_channels = I.shape[-1]
             
-            thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
+            segmented_cells_copy = segmented_cells.copy()
+            num_channels = I.shape[-1]
+            if not np.isnan(scaling_factor):
+                gaussian_stdev = gaussian_sigma / scaling_factor
+                min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
+                gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]       
+
+                thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
+            else:
+                thresholded = np.zeros_like(I)[...,1:]
+                gaussian_stdev = min_cc_size = gaussian_kernel_shape = np.nan
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
-
-    
             names = []; cell_sizes = []; centroids = [];  green_red_pixels = []; green_red_blobs = []
             
             fish_sizes, fish_blobs, avg_fish, max_fish = [[[] for _ in range(num_channels-1)] for _ in range(4)]

@@ -7,9 +7,8 @@ from image_tools import *
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 from scipy import ndimage as ndi
-from pathlib import Path
 from skimage import *
-
+from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 import tensorflow.python.util.deprecation as deprecation
@@ -19,28 +18,26 @@ INTER_MODEL = 'interseg'
 CELL_THRESHOLD = 0.5
 IMG_THRESHOLD = 0.5
 
-def split_nuclei_segments(img, overlap = 75, scw = 256): 
+def im2patches_overlap(img, overlap = 75, scw = 256): 
     h, w = img.shape[:2]
     patches = []
     for i in range(0, math.ceil(h/scw)):
         min_row = i*scw
-        max_row = min_row + scw
-        if(max_row > h):
-            if(max_row - h < overlap):
+        if(h < 256):
+            max_row = h
+        else:
+            max_row = min_row + scw
+            if(max_row > h):
                 continue
-            else:
-                max_row = h
-                min_row = max_row - scw
         for j in range(0, math.ceil(w/scw)):
             min_col = j*scw
-            max_col = min_col + scw
-            if(max_col > w):
-                if(max_row - h < overlap):
+            if(w < 256):
+                max_col = w
+            else:
+                max_col = min_col + scw
+                if(max_col > w):
                     continue
-                else:
-                    max_col = w
-                    min_col = max_col - scw
-                    patches.append(img[min_row:max_row, min_col:max_col, :])
+            patches.append(resize(img[min_row:max_row, min_col:max_col], (256, 256), preserve_range=True).astype('uint8'))
     return patches
 
 def main(argv):
@@ -87,7 +84,7 @@ def main(argv):
         imheight, imwidth = segmented_cells.shape
         I = I[:imheight, :imwidth, fish_index]
 
-        segmented_cells = measure.label(segmented_cells, connectivity=1)
+        segmented_cells = measure.label(segmented_cells, connectivity=None)
         regions = measure.regionprops(segmented_cells)
 
         centroids = []; predictions = []; names = []
@@ -109,7 +106,7 @@ def main(argv):
                 names.append(path_split[-1][:-4])
             else:
                 nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w)]
-                patches = split_nuclei_segments(nuclei)
+                patches = im2patches_overlap(nuclei)
                 for p in patches: 
                     cell_prediction = model.predict(np.expand_dims(p, 0))
                     # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])

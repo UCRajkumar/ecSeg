@@ -1,13 +1,13 @@
 interseg:
-  inpath: ../images
-  FISH_color: green
+  inpath: /nucleus/projects/giprasad/Wei_analysis/FISH-results/CCGA-37T_TIF/batches/batch_14
+  FISH_color: red
 meta_overlay:
   inpath: ../images
   color_sensitivity: 85
 metaseg:
   inpath: ../images
 stat_fish:
-  inpath: ../images
+  inpath: /home/giprasad/test_dataset_3_channel
 
   # Peak Threshold Parameters
   normal_threshold: 15
@@ -25,7 +25,7 @@ stat_fish:
   # NuSeT Parameters
   min_score: 0.95
   nms_threshold: 0.01
-  nuclei_size_T: 5000
+  nuclei_size_T: 500
   scale_ratio: 0.3
 
   # Normalized Nuclei FISH Parameters (Scaled)
