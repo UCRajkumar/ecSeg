@@ -8,6 +8,7 @@ from image_tools import *
 import seaborn as sns
 from skimage import *
 import scipy.stats
+from pathlib import Path
 import cv2
 
 import warnings
@@ -136,6 +137,7 @@ def count_blobs(fish_splice, cell_seg, min_cc_size):
 def main(argv):
     config = open("config.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
+    Path("README.md").touch()
     
     inpath = var['inpath']
     
@@ -206,30 +208,32 @@ def main(argv):
 
             segmented_cells = nuclei_segment(blue, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, nuclei_size_t)
             
-            if not segmented_cells.any():
-                continue
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
 
             # color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
+            if var['use_min_cut']:
+                labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
+            else:
+                labeled_segmented_cells = measure.label(segmented_cells, connectivity=1)
 
-            labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
-            
             regions = measure.regionprops(labeled_segmented_cells)
             
             scaling_factor = scaling_factor if scaling_factor != 'auto' else get_scale(labeled_segmented_cells, target_median_nuclei_size)
-            gaussian_stdev = gaussian_sigma / scaling_factor
-            min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
-            gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]            
-            segmented_cells_copy = segmented_cells.copy()
-
-            num_channels = I.shape[-1]
             
-            thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
+            segmented_cells_copy = segmented_cells.copy()
+            num_channels = I.shape[-1]
+            if not np.isnan(scaling_factor):
+                gaussian_stdev = gaussian_sigma / scaling_factor
+                min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
+                gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]       
+
+                thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
+            else:
+                thresholded = np.zeros_like(I)[...,1:]
+                gaussian_stdev = min_cc_size = gaussian_kernel_shape = np.nan
             thresholded_copy = thresholded.copy().astype(np.uint8)
 
-
-    
             names = []; cell_sizes = []; centroids = [];  green_red_pixels = []; green_red_blobs = []
             
             fish_sizes, fish_blobs, avg_fish, max_fish = [[[] for _ in range(num_channels-1)] for _ in range(4)]
@@ -258,9 +262,11 @@ def main(argv):
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 names.append(path_split[-1][:-4])
                 
-                green_red_splice = fish[0] * fish[1]
+                green_red_splice = ((fish[0]) * (fish[1] / 255))
                 blob_count = count_blobs(green_red_splice, cell_seg, min_cc_size)
-                green_red_pixels.append((green_red_splice * cell_seg).sum() / 255)
+                fish_pixels = (green_red_splice * cell_seg).sum() / 255
+                assert fish_pixels == int(fish_pixels)
+                green_red_pixels.append(int(fish_pixels))
                 green_red_blobs.append(blob_count)
 
             df['image_name'] = np.array(names)
@@ -273,7 +279,7 @@ def main(argv):
                 df[f'Max fish intensity ({channel_name})'] = np.array(max_fish_ch)
 
             df['#_DAPI_pixels'] = np.array(cell_sizes)
-            df[f'#_FISH_pixels (green and red))'] = np.array(green_red_pixels)
+            df[f'#_FISH_pixels (green and red)'] = np.array(green_red_pixels)
             df[f'#_FISH_foci (green and red)'] = np.array(green_red_blobs)
             dfs.append(df)
             
@@ -290,7 +296,8 @@ def main(argv):
             
             np.save(f"{annotated_path}/{img_name}__segmentation_min_cut.npy", labeled_segmented_cells)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation.tif", segmented_cells_copy)
-            assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
+            if var['use_min_cut']:
+                assert cv2.imwrite(f"{annotated_path}/{img_name}_segmentation_corrected_min_cut.tif", labeled_segmented_cells_visualization)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original_with_segmentation.tif", img_with_segmentation)
             assert cv2.imwrite(f"{annotated_path}/{img_name}_original.tif", I)
             assert cv2.imwrite(image_least_squares_path, blob_labeled_img)

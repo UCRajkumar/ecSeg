@@ -1,13 +1,13 @@
 interseg:
-  inpath: ../im2
-  FISH_color: green
+  inpath: ../images
+  FISH_color: red
 meta_overlay:
-  inpath: du145_red_hsr
+  inpath: ../images
   color_sensitivity: 85
 metaseg:
-  inpath: ../im2
+  inpath: ../images
 stat_fish:
-  inpath: ../im2
+  inpath: ../images
 
   # Peak Threshold Parameters
   normal_threshold: 15
@@ -15,6 +15,7 @@ stat_fish:
   scale: auto
 
   # Min Cut Segmentation Improvement Parameters
+  use_min_cut: False
   cell_size_threshold_coeff: 1.25
   flow_limit: 60
 
@@ -34,7 +35,7 @@ stat_fish:
   target_median_nuclei_size: 2500
 
 fish_distance_calculation:
-  inpath: ../im2
+  inpath: ../images
   centromere_probe_color: green
   fish_probe_color: red
   max_centromeric_spots: 3
