@@ -1,5 +1,5 @@
 interseg:
-  inpath: /nucleus/projects/giprasad/Wei_analysis/FISH-results/CCGA-37T_TIF/batches/batch_14
+  inpath: ../images
   FISH_color: red
 meta_overlay:
   inpath: ../images
@@ -7,7 +7,7 @@ meta_overlay:
 metaseg:
   inpath: ../images
 stat_fish:
-  inpath: /home/giprasad/test_dataset_3_channel
+  inpath: ../images
 
   # Peak Threshold Parameters
   normal_threshold: 15
@@ -15,7 +15,7 @@ stat_fish:
   scale: auto
 
   # Min Cut Segmentation Improvement Parameters
-  use_min_cut: True
+  use_min_cut: False
   cell_size_threshold_coeff: 1.25
   flow_limit: 60
 

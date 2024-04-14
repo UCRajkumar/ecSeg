@@ -215,7 +215,7 @@ def main(argv):
             if var['use_min_cut']:
                 labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
             else:
-                labeled_segmented_cells = measure.label(segmented_cells, connectivity=None)
+                labeled_segmented_cells = measure.label(segmented_cells, connectivity=1)
 
             regions = measure.regionprops(labeled_segmented_cells)
             
