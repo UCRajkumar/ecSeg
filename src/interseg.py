@@ -67,7 +67,12 @@ def main(argv):
         pass
     else:
         os.mkdir(os.path.join(inpath, 'annotated'))
-
+    
+    label_map = {
+        0: 'No-amp',
+        1: 'EC-amp',
+        2: 'HSR-amp',
+    }
     image_paths = get_imgs(inpath)
 
     model = load_model(INTER_MODEL)
@@ -87,7 +92,7 @@ def main(argv):
         segmented_cells = measure.label(segmented_cells, connectivity=None)
         regions = measure.regionprops(segmented_cells)
 
-        centroids = []; predictions = []; names = []
+        centroids = []; pred_no_amp = []; pred_ec = []; pred_hsr = []; majority_label = []; names = []
         df = pd.DataFrame()
 
         # cell_dict = {}
@@ -102,7 +107,15 @@ def main(argv):
                 cell_prediction = model.predict(np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0))
                 # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
-                predictions.append(list(cell_prediction[0]))
+                
+                
+                pred_no_amp_, pred_ec_, pred_hsr_  = cell_prediction[0]
+                pred_no_amp.append(pred_no_amp_)
+                pred_ec.append(pred_ec_)
+                pred_hsr.append(pred_hsr_)
+                majority_label_ = label_map[np.argmax(cell_prediction[0])]
+                majority_label.append(majority_label_)
+                
                 names.append(path_split[-1][:-4])
             else:
                 nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w)]
@@ -111,12 +124,23 @@ def main(argv):
                     cell_prediction = model.predict(np.expand_dims(p, 0))
                     # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
                     centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
-                    predictions.append(list(cell_prediction[0]))
+                    pred_no_amp_, pred_ec_, pred_hsr_  = cell_prediction[0]
+                    pred_no_amp.append(pred_no_amp_)
+                    pred_ec.append(pred_ec_)
+                    pred_hsr.append(pred_hsr_)
                     names.append(path_split[-1][:-4])
+                    
+                    majority_label_ = label_map[np.argmax(cell_prediction[0])]
+                    majority_label.append(majority_label_)
         
         df['image_name'] = np.array(names)
         df['nucleus_center'] = np.array(centroids)
-        df['predictions'] = predictions
+        
+        df['Majority_label'] = majority_label
+        df['pred_No-amp'] = pred_no_amp
+        df['pred_EC-amp'] = pred_ec
+        df['pred_HSR-amp'] = pred_hsr
+        
         dfs.append(df)
         # img_dict[i] = (cell_dict)
 
