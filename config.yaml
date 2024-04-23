@@ -15,7 +15,7 @@ stat_fish:
   scale: auto
 
   # Min Cut Segmentation Improvement Parameters
-  use_min_cut: False
+  use_min_cut: True
   cell_size_threshold_coeff: 1.25
   flow_limit: 60
 
