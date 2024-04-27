@@ -28,7 +28,8 @@ import functools
 
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
-import random
+import numpy as np
+import hashlib
 
 
 class Edge:
@@ -146,9 +147,9 @@ def binary_img_to_centers(mask, center_conv):
         centroid = (np.round(cell_region.centroid)).astype(int)
         if not mask[centroid[0], centroid[1]]:
             alternatives = [(i, j) for i, row in enumerate(labeled_center_conv) for j, val in enumerate(row) if val == cell_region.label]
-            alternative = alternatives[random.randint(0, len(alternatives)-1)]
+            alternative = alternatives[np.random.randint(len(alternatives))]
             assert mask[alternative[0], alternative[1]]
-            print(f"PICKED ALTERNATE CENTROID {centroid} {alternative}")
+#             print(f"PICKED ALTERNATE CENTROID {centroid} {alternative}")
             centroid = alternative
         center_ls.append(centroid)
     center_ls = list(map(lambda center: tuple(np.round(center).astype(int)), center_ls))
@@ -190,7 +191,7 @@ def get_centers(segmented_cells, min_rad=10, percentile=0):
     grad = np.expand_dims(np.prod(np.array(grad), axis=0), (0, 3)).astype(np.int32)
     
     if not (grad[0,...,0] > 0).any():
-        print("ERROR: No Centers Found in Current Cell")
+#         print("ERROR: No Centers Found in Current Cell")
         return []
     percentile = np.percentile(distance_transformed[0,1:-1,1:-1,0][grad[0,...,0] > 0], percentile)
     min_rad = max(percentile, min_rad)
@@ -198,7 +199,8 @@ def get_centers(segmented_cells, min_rad=10, percentile=0):
     return binary_img_to_centers(segmented_cells, np.pad(centers, 1))
 
 
-def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff):
+def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff, seed=1):
+    np.random.seed(seed)
     labeled_segmented_cells, num_cells = skimage.measure.label(segmented_cells, connectivity=1, return_num=True)
     areas = [region.area for region in skimage.measure.regionprops(labeled_segmented_cells)]
     expected_cell_size = np.median(areas)
@@ -223,7 +225,7 @@ def binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_thresh
                         updated_labeled_segmented_cells[region.slice] += cell * (num_cells)            
             
     
-    vis_hash = lambda x, salt='': hash(f"{x}_{salt}") % 256 if x else 0
+    vis_hash = lambda x, salt: int(hashlib.blake2b(str(x).encode(), digest_size=1, salt=f"{seed}_{salt}".encode()).hexdigest(), 16) if x else 0
     r, g = [np.vectorize(functools.partial(vis_hash, salt=salt))(updated_labeled_segmented_cells) for salt in ('r', 'g')]
     b = np.vectorize(max)(np.vectorize(min)(384 - r - g, 255), 0) * segmented_cells.astype(bool).astype(int)
     visualization = np.dstack([r, g, b]).astype(np.uint8)

@@ -23,14 +23,15 @@ def foreground_norm(image, mask):
     return im_foreground_norm
 
 def clean_image(image):
-   """ perform small region removal and fill holes """
-   image = image.astype(np.bool)
-   im_label = morphology.label(image, connectivity=1)
-   num_cells = np.max(im_label)
-   mean_area = np.sum(image).astype(np.float32)/num_cells
-
-   # if a region < 1/5 of a normal cell, remove it
-   image = morphology.remove_small_objects(image, min_size=mean_area/5, connectivity=2)
-   # if a hole < 1/5 of a normal cell, remove it
-   image = morphology.remove_small_holes(image, area_threshold=mean_area/5, connectivity=2)
-   return image.astype(np.uint8)
+    """ perform small region removal and fill holes """
+    image = image.astype(np.bool)
+    im_label = morphology.label(image, connectivity=1)
+    num_cells = np.max(im_label)
+    mean_area = np.sum(image).astype(np.float32)/num_cells
+    # print(f"Mean Area: {mean_area}")
+    
+    # if a region < 1/5 of a normal cell, remove it
+    image = morphology.remove_small_objects(image, min_size=mean_area/5, connectivity=2)
+    # if a hole < 1/5 of a normal cell, remove it
+    image = morphology.remove_small_holes(image, area_threshold=mean_area/5, connectivity=2)
+    return image.astype(np.uint8)

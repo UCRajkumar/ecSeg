@@ -121,7 +121,7 @@ def get_scale(labeled_segmented_cells, target_median_nuclei_size):
     areas = [nuclei.area for nuclei in measure.regionprops(labeled_segmented_cells)]
     median_size = np.median(areas)
     scaling_factor = np.sqrt(target_median_nuclei_size / median_size)
-    print(f"Scale: {scaling_factor}")
+#     print(f"Scale: {scaling_factor}")
     return scaling_factor
 
 def count_blobs(fish_splice, cell_seg, min_cc_size):
