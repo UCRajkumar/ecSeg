@@ -133,6 +133,9 @@ def main(argv):
                     ecseg_c_label.append('No_Prediction: Low_brightness')
                     pred_no_focal_amp.append('No_Prediction: Low_brightness')
                     pred_focal_amp.append('No_Prediction: Low_brightness')
+                
+                centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
+                names.append(path_split[-1][:-4])
                 continue
             
             bb = region.bbox
