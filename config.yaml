@@ -1,13 +1,14 @@
 interseg:
-  inpath: ../images
-  FISH_color: red
+  inpath: /home/giprasad/test_dataset_3_channel
+  FISH_color: green
+  has_centromeric_probe: True
 meta_overlay:
   inpath: ../images
   color_sensitivity: 85
 metaseg:
   inpath: ../images
 stat_fish:
-  inpath: ../images
+  inpath: /home/giprasad/test_dataset_3_channel
 
   # Peak Threshold Parameters
   normal_threshold: 15

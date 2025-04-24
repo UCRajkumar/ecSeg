@@ -157,3 +157,17 @@ def nuclei_segment(image, resize_scale, sess1, sess2, pred_masks, train_initial,
     I8 = morphology.remove_small_objects(I8.astype('bool'), NUCLEI_SIZE_T).astype('int') * 255
     I8 = I8.astype('uint8')
     return I8
+
+def ecseg_c_preprocess(img):
+    img = img.astype(np.float32)
+    ch = []
+    for ch_index in range(img.shape[-1]):
+        ch_slice = img[...,ch_index]
+        ch_slice /= 255
+        
+        mask = ch_slice != 0
+        ch_mean = ch_slice[mask].mean() 
+        ch_slice += (~mask)*ch_mean
+        ch.append(ch_slice)
+    img = np.stack(ch, axis=0)
+    return img - 0.5

@@ -12,11 +12,11 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 import tensorflow.python.util.deprecation as deprecation
+from tqdm import tqdm
 deprecation._PRINT_DEPRECATION_WARNINGS = False
 
-INTER_MODEL = 'interseg'
-CELL_THRESHOLD = 0.5
-IMG_THRESHOLD = 0.5
+ECSEG_I_MODEL = 'interseg'
+ECSEG_C_MODEL = 'ecseg_c'
 
 def im2patches_overlap(img, overlap = 75, scw = 256): 
     h, w = img.shape[:2]
@@ -47,6 +47,7 @@ def main(argv):
     Path("README.md").touch()
     inpath = var['inpath']
     fish_color = var['FISH_color'].lower()
+    has_centromeric_probe = var['has_centromeric_probe']
 
     #check input parameters
     if(os.path.isdir(os.path.join(inpath)) == False):
@@ -68,14 +69,30 @@ def main(argv):
     else:
         os.mkdir(os.path.join(inpath, 'annotated'))
     
-    label_map = {
+    ecseg_i_label_map = {
         0: 'No-amp',
         1: 'EC-amp',
         2: 'HSR-amp',
     }
+    
+    ecseg_c_label_map = {
+        0: 'No-amp',
+        1: 'Focal-amp',
+    }
+    
+    interseg_label_map = {
+        ('No-amp', 'No-amp'): 'No-amp',
+        ('No-amp', 'EC-amp'): 'No-amp',
+        ('No-amp', 'HSR-amp'): 'No-amp',
+        ('Focal-amp', 'No-amp'): 'No-amp',
+        ('Focal-amp', 'EC-amp'): 'EC-amp',
+        ('Focal-amp', 'HSR-amp'): 'HSR-amp',
+    }
+    
     image_paths = get_imgs(inpath)
 
-    model = load_model(INTER_MODEL)
+    ecseg_i_model = load_model(ECSEG_I_MODEL)
+    ecseg_c_model = load_model(ECSEG_C_MODEL)
     img_dict = {}
     dfs = []
     for i in image_paths:
@@ -87,59 +104,105 @@ def main(argv):
         segmented_cells = io.imread(seg_cells_path)
         
         imheight, imwidth = segmented_cells.shape
-        I = I[:imheight, :imwidth, fish_index]
-
+        I = I[:imheight, :imwidth,:] #the labels is slightly truncated
+        I = np.dstack([I[...,fish_index], I[...,1-fish_index], I[...,2]])
+        
         segmented_cells = measure.label(segmented_cells, connectivity=None)
         regions = measure.regionprops(segmented_cells)
 
-        centroids = []; pred_no_amp = []; pred_ec = []; pred_hsr = []; majority_label = []; names = []
+        centroids = []; pred_no_amp = []; pred_ec = []; pred_hsr = []; ecseg_i_label = []; names = []
+        pred_no_focal_amp = []; pred_focal_amp = []; ecseg_c_label = []; interseg_label = []
         df = pd.DataFrame()
 
         # cell_dict = {}
-        for region in regions:
+        for region in tqdm(regions):
             center = region.centroid
             mask = (segmented_cells == region.label)
-            temp = I * mask
+            temp = I * np.expand_dims(mask, -1)
+            
+            if (np.sum(temp[...,0])/np.sum(mask) < 0.05):
+                interseg_label.append('No_Prediction: Low_brightness')
+                ecseg_i_label.append('No_Prediction: Low_brightness')
+                pred_no_amp.append('No_Prediction: Low_brightness')
+                pred_ec.append('No_Prediction: Low_brightness')
+                pred_hsr.append('No_Prediction: Low_brightness')
+                
+                if has_centromeric_probe:
+                    ecseg_c_label.append('No_Prediction: Low_brightness')
+                    pred_no_focal_amp.append('No_Prediction: Low_brightness')
+                    pred_focal_amp.append('No_Prediction: Low_brightness')
+                continue
+            
             bb = region.bbox
             h = bb[2] - bb[0]; w = bb[3] - bb[1]
             if((h <= 256) & (w <= 256)):
                 nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w))]
-                cell_prediction = model.predict(np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0))
-                # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
+                p = resize(nuclei, (256, 256), preserve_range=True)
+                ecseg_i_prediction = ecseg_i_model.predict(np.expand_dims(p[...,0], 0))
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 
-                
-                pred_no_amp_, pred_ec_, pred_hsr_  = cell_prediction[0]
+                pred_no_amp_, pred_ec_, pred_hsr_  = ecseg_i_prediction[0]
                 pred_no_amp.append(pred_no_amp_)
                 pred_ec.append(pred_ec_)
                 pred_hsr.append(pred_hsr_)
-                majority_label_ = label_map[np.argmax(cell_prediction[0])]
-                majority_label.append(majority_label_)
+                
+                ecseg_i_label_ = ecseg_i_label_map[np.argmax(ecseg_i_prediction[0])]
+                ecseg_i_label.append(ecseg_i_label_)
+                
+                if has_centromeric_probe:
+                    p = tf.convert_to_tensor(np.expand_dims(ecseg_c_preprocess(p.astype('uint8')), 0), dtype=tf.float32)
+                    ecseg_c_prediction = tf.nn.softmax(list(ecseg_c_model(**{'input.1': p}).values())[0])
+                
+                    pred_no_focal_amp_, pred_focal_amp_ = ecseg_c_prediction[0]
+                    pred_no_focal_amp.append(pred_no_focal_amp_)
+                    pred_focal_amp.append(pred_focal_amp_)
+
+                    ecseg_c_label_ = ecseg_c_label_map[np.argmax(ecseg_c_prediction[0])]
+                    ecseg_c_label.append(ecseg_c_label_)
+
+                    interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
+                else:
+                    interseg_label.append(ecseg_i_label_)
                 
                 names.append(path_split[-1][:-4])
             else:
                 nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w)]
                 patches = im2patches_overlap(nuclei)
                 for p in patches: 
-                    cell_prediction = model.predict(np.expand_dims(p, 0))
-                    # cell_dict[str(int(center[0])) + '_' + str(int(center[1]))] = list(cell_prediction[0])
+                    ecseg_i_prediction = ecseg_i_model.predict(np.expand_dims(p[...,0], 0))
+                
                     centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
-                    pred_no_amp_, pred_ec_, pred_hsr_  = cell_prediction[0]
+                    pred_no_amp_, pred_ec_, pred_hsr_  = ecseg_i_prediction[0]
                     pred_no_amp.append(pred_no_amp_)
                     pred_ec.append(pred_ec_)
                     pred_hsr.append(pred_hsr_)
+
+                    ecseg_i_label_ = ecseg_i_label_map[np.argmax(ecseg_i_prediction[0])]
+                    ecseg_i_label.append(ecseg_i_label_)
+
+                    if has_centromeric_probe:
+                        p = tf.convert_to_tensor(np.expand_dims(ecseg_c_preprocess(p), 0), dtype=tf.float32)
+                        ecseg_c_prediction = tf.nn.softmax(list(ecseg_c_model(**{'input.1': p}).values())[0])
+                        
+                        pred_no_focal_amp_, pred_focal_amp_ = ecseg_c_prediction[0]
+                        pred_no_focal_amp.append(pred_no_focal_amp_)
+                        pred_focal_amp.append(pred_focal_amp_)
+
+                        ecseg_c_label_ = ecseg_c_label_map[np.argmax(ecseg_c_prediction[0])]
+                        ecseg_c_label.append(ecseg_c_label_)
+
+                        interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
+                    else:
+                        interseg_label.append(ecseg_i_label_)
                     names.append(path_split[-1][:-4])
-                    
-                    majority_label_ = label_map[np.argmax(cell_prediction[0])]
-                    majority_label.append(majority_label_)
         
         df['image_name'] = np.array(names)
         df['nucleus_center'] = np.array(centroids)
         
-        df['Majority_label'] = majority_label
-        df['pred_No-amp'] = pred_no_amp
-        df['pred_EC-amp'] = pred_ec
-        df['pred_HSR-amp'] = pred_hsr
+        df['interSeg_label'] = interseg_label
+        if has_centromeric_probe:
+            df['ecSeg-c_label'] = ecseg_c_label
+        df['ecSeg-i_label'] = ecseg_i_label
         
         dfs.append(df)
         # img_dict[i] = (cell_dict)
