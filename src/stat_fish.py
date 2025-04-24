@@ -10,7 +10,7 @@ from skimage import *
 import scipy.stats
 from pathlib import Path
 import cv2
-
+from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -136,36 +136,38 @@ def count_blobs(fish_splice, cell_seg, min_cc_size):
 
 def main(argv):
     config = open("config.yaml")
+    stat_fish_params_file = open("src/stat_fish_params.yaml")
     var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
+    stat_fish_params = yaml.load(stat_fish_params_file, Loader=yaml.FullLoader)
     Path("README.md").touch()
     
     inpath = var['inpath']
     
     # Intensity and Normal Distribution Scaled Thresholds
-    normal_threshold = var['normal_threshold']
+    normal_threshold = stat_fish_params['normal_threshold']
     # intensity_threshold_std_coeff = var['intensity_threshold_std_coeff']
-    color_sensitivity = var['color_sensitivity']
+    color_sensitivity = stat_fish_params['color_sensitivity']
 
         
     # Image Resizing Parameters
     scaling_factor = var['scale']
-    target_median_nuclei_size = var["target_median_nuclei_size"]
-    kernel_shape = var['kernel_size']
+    target_median_nuclei_size = stat_fish_params["target_median_nuclei_size"]
+    kernel_shape = stat_fish_params['kernel_size']
 
     # Gaussian Kernel Parameters
-    gaussian_sigma = var['gaussian_sigma']
+    gaussian_sigma = stat_fish_params['gaussian_sigma']
 
     # Cosmetic: thickness of segmentation lines
-    line_thickness = var['line_thickness']
+    line_thickness = stat_fish_params['line_thickness']
     aqua_rgb = [233, 137, 54]
     
     # NuSeT parameters
-    bbox_min_score = var['min_score'] 
-    nms_thresh = var['nms_threshold']
-    resize_scale = var['scale_ratio']
+    bbox_min_score = stat_fish_params['min_score'] 
+    nms_thresh = stat_fish_params['nms_threshold']
+    resize_scale = stat_fish_params['scale_ratio']
     nuclei_size_t = var['nuclei_size_T']
-    flow_limit = var['flow_limit']
-    cell_size_threshold_coeff = var['cell_size_threshold_coeff']
+    flow_limit = stat_fish_params['flow_limit']
+    cell_size_threshold_coeff = stat_fish_params['cell_size_threshold_coeff']
 
 
     #check input parameters
@@ -180,7 +182,7 @@ def main(argv):
     else:
         os.mkdir(os.path.join(inpath, output_folder))
     shutil.copyfile('config.yaml', os.path.join(inpath, output_folder, 'config.yaml'))
-
+    shutil.copyfile('src/stat_fish_params.yaml', os.path.join(inpath, output_folder, 'stat_fish_params.yaml'))
 
     image_paths = get_imgs(inpath)
     first_fish = 'green'
@@ -215,7 +217,7 @@ def main(argv):
             if var['use_min_cut']:
                 labeled_segmented_cells, labeled_segmented_cells_visualization = max_flow_binary_mask.binary_seg_to_instance_min_cut(segmented_cells, flow_limit, cell_size_threshold_coeff)
             else:
-                labeled_segmented_cells = measure.label(segmented_cells, connectivity=1)
+                labeled_segmented_cells = measure.label(segmented_cells, connectivity=None)
 
             regions = measure.regionprops(labeled_segmented_cells)
             
@@ -225,7 +227,7 @@ def main(argv):
             num_channels = I.shape[-1]
             if not np.isnan(scaling_factor):
                 gaussian_stdev = gaussian_sigma / scaling_factor
-                min_cc_size = int(var['min_cc_size'] // (scaling_factor * scaling_factor))
+                min_cc_size = int(stat_fish_params['min_cc_size'] // (scaling_factor * scaling_factor))
                 gaussian_kernel_shape = [int(dim // scaling_factor) if (dim // scaling_factor % 2) else int(dim // scaling_factor) + 1 for dim in kernel_shape]       
 
                 thresholded = get_thresholded(I, segmented_cells, gaussian_stdev, normal_threshold, color_sensitivity, gaussian_kernel_shape)
@@ -239,9 +241,8 @@ def main(argv):
             fish_sizes, fish_blobs, avg_fish, max_fish = [[[] for _ in range(num_channels-1)] for _ in range(4)]
             df = pd.DataFrame()
             exec_summary = pd.DataFrame()
-            print('Number of regions: ', len(regions))
             
-            for region in regions:
+            for region in tqdm(regions):
                 raw_cell, thresh_cell, cell_seg, (y_splice, x_splice) = cell_splice_segmentation(I, thresholded, labeled_segmented_cells, region)
                 fish = [thresh_cell[...,channel] for channel in range(num_channels-1)]
                 raw_fish = [raw_cell[...,channel].astype(np.int64) * cell_seg for channel in range(1, num_channels)]

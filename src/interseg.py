@@ -92,7 +92,9 @@ def main(argv):
     image_paths = get_imgs(inpath)
 
     ecseg_i_model = load_model(ECSEG_I_MODEL)
-    ecseg_c_model = load_model(ECSEG_C_MODEL)
+    if has_centromeric_probe:
+        ecseg_c_model = load_model(ECSEG_C_MODEL)
+
     img_dict = {}
     dfs = []
     for i in image_paths:

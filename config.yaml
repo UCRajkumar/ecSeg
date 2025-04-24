@@ -1,5 +1,5 @@
 interseg:
-  inpath: /home/giprasad/test_dataset_3_channel
+  inpath: ../images
   FISH_color: green
   has_centromeric_probe: True
 meta_overlay:
@@ -8,33 +8,10 @@ meta_overlay:
 metaseg:
   inpath: ../images
 stat_fish:
-  inpath: /home/giprasad/test_dataset_3_channel
-
-  # Peak Threshold Parameters
-  normal_threshold: 15
-  color_sensitivity: [70, 70]
-  scale: auto
-
-  # Min Cut Segmentation Improvement Parameters
-  use_min_cut: True
-  cell_size_threshold_coeff: 1.25
-  flow_limit: 60
-
-  # Cosmetic Parameters
-  line_thickness: 2
-
-  # NuSeT Parameters
-  min_score: 0.95
-  nms_threshold: 0.01
+  inpath: ../images
+  scale: 1
+  use_min_cut: False
   nuclei_size_T: 500
-  scale_ratio: 0.3
-
-  # Normalized Nuclei FISH Parameters (Scaled)
-  min_cc_size: 7
-  gaussian_sigma: 3
-  kernel_size: [7, 7]
-  target_median_nuclei_size: 2500
-
 fish_distance_calculation:
   inpath: ../images
   centromere_probe_color: green
