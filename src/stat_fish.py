@@ -181,7 +181,9 @@ def main(argv):
         pass
     else:
         os.mkdir(os.path.join(inpath, output_folder))
-    shutil.copyfile('config.yaml', os.path.join(inpath, output_folder, 'config.yaml'))
+        
+    current_git_commit = sp.run('git log -1 | head -1', shell=True, capture_output=True).stdout.decode().strip().split(' ')[-1]
+    shutil.copyfile('config.yaml', os.path.join(inpath, output_folder, f'config_{current_git_commit}.yaml'))
     shutil.copyfile('src/stat_fish_params.yaml', os.path.join(inpath, output_folder, 'stat_fish_params.yaml'))
 
     image_paths = get_imgs(inpath)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import yaml, glob, os, sys, pickle
+import subprocess as sp
 import pandas as pd
 import numpy as np
 from utils import *
@@ -123,16 +124,16 @@ def main(argv):
             temp = I * np.expand_dims(mask, -1)
             
             if (np.sum(temp[...,0])/np.sum(mask) < 0.05):
-                interseg_label.append('No_Prediction: Low_brightness')
-                ecseg_i_label.append('No_Prediction: Low_brightness')
-                pred_no_amp.append('No_Prediction: Low_brightness')
-                pred_ec.append('No_Prediction: Low_brightness')
-                pred_hsr.append('No_Prediction: Low_brightness')
+                interseg_label.append('No_Prediction (Low_TRGT_brightness)')
+                ecseg_i_label.append('No_Prediction (Low_TRGT_brightness)')
+                pred_no_amp.append('No_Prediction (Low_TRGT_brightness)')
+                pred_ec.append('No_Prediction (Low_TRGT_brightness)')
+                pred_hsr.append('No_Prediction (Low_TRGT_brightness)')
                 
                 if has_centromeric_probe:
-                    ecseg_c_label.append('No_Prediction: Low_brightness')
-                    pred_no_focal_amp.append('No_Prediction: Low_brightness')
-                    pred_focal_amp.append('No_Prediction: Low_brightness')
+                    ecseg_c_label.append('No_Prediction (Low_TRGT_brightness)')
+                    pred_no_focal_amp.append('No_Prediction (Low_TRGT_brightness)')
+                    pred_focal_amp.append('No_Prediction (Low_TRGT_brightness)')
                 
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 names.append(path_split[-1][:-4])
@@ -144,7 +145,6 @@ def main(argv):
                 nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w))]
                 p = resize(nuclei, (256, 256), preserve_range=True)
                 ecseg_i_prediction = ecseg_i_model.predict(np.expand_dims(p[...,0], 0))
-                centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 
                 pred_no_amp_, pred_ec_, pred_hsr_  = ecseg_i_prediction[0]
                 pred_no_amp.append(pred_no_amp_)
@@ -168,15 +168,32 @@ def main(argv):
                     interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
                 else:
                     interseg_label.append(ecseg_i_label_)
-                
+
+                centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
                 names.append(path_split[-1][:-4])
             else:
                 nuclei = temp[bb[0]:(bb[0] + h), bb[1]:(bb[1]+ w)]
                 patches = im2patches_overlap(nuclei)
-                for p in patches: 
-                    ecseg_i_prediction = ecseg_i_model.predict(np.expand_dims(p[...,0], 0))
-                
+                for p in patches:
+                    names.append(path_split[-1][:-4])
                     centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
+
+                    if not p.any():
+                        interseg_label.append('No_Prediction (Segmentation_Empty)')
+                        ecseg_i_label.append('No_Prediction (Segmentation_Empty)')
+                        pred_no_amp.append('No_Prediction (Segmentation_Empty)')
+                        pred_ec.append('No_Prediction (Segmentation_Empty)')
+                        pred_hsr.append('No_Prediction (Segmentation_Empty)')
+
+                        if has_centromeric_probe:
+                            ecseg_c_label.append('No_Prediction (Segmentation_Empty)')
+                            pred_no_focal_amp.append('No_Prediction (Segmentation_Empty)')
+                            pred_focal_amp.append('No_Prediction (Segmentation_Empty)')
+                        continue
+                    
+                    p = np.expand_dims(p, 0)
+                    ecseg_i_prediction = ecseg_i_model.predict(p[...,0])
+                
                     pred_no_amp_, pred_ec_, pred_hsr_  = ecseg_i_prediction[0]
                     pred_no_amp.append(pred_no_amp_)
                     pred_ec.append(pred_ec_)
@@ -185,11 +202,11 @@ def main(argv):
                     ecseg_i_label_ = ecseg_i_label_map[np.argmax(ecseg_i_prediction[0])]
                     ecseg_i_label.append(ecseg_i_label_)
 
-                    if has_centromeric_probe:
-                        p = tf.convert_to_tensor(np.expand_dims(ecseg_c_preprocess(p), 0), dtype=tf.float32)
-                        ecseg_c_prediction = tf.nn.softmax(list(ecseg_c_model(**{'input.1': p}).values())[0])
+                    if has_centromeric_probe and p[...,1].max() > 10:
+                        p = tf.cast(p, tf.float32) / 255
+                        ecseg_c_prediction = ecseg_c_model.predict(p)
                         
-                        pred_no_focal_amp_, pred_focal_amp_ = ecseg_c_prediction[0]
+                        pred_no_focal_amp_, pred_focal_amp_ = 1-ecseg_c_prediction[0,0],ecseg_c_prediction[0,0]
                         pred_no_focal_amp.append(pred_no_focal_amp_)
                         pred_focal_amp.append(pred_focal_amp_)
 
@@ -198,8 +215,12 @@ def main(argv):
 
                         interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
                     else:
+                        if has_centromeric_probe and p[...,1].max() <= 10:
+                            ecseg_c_label.append('No_Prediction (Low_CENT_Brightness)')
+                            pred_no_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
+                            pred_focal_amp.append('No_Prediction (Low_CENT_Brightness)'
                         interseg_label.append(ecseg_i_label_)
-                    names.append(path_split[-1][:-4])
+
         
         df['image_name'] = np.array(names)
         df['nucleus_center'] = np.array(centroids)
@@ -212,8 +233,11 @@ def main(argv):
         dfs.append(df)
         # img_dict[i] = (cell_dict)
 
+    current_git_commit = sp.run('git log -1 | head -1', shell=True, capture_output=True).stdout.decode().strip().split(' ')[-1]
     dfs = pd.concat(dfs)
-    dfs.to_csv(os.path.join(path_split[0],  f'interphase_prediction_{fish_color}.csv'), index=False)
+    dfs.to_csv(os.path.join(path_split[0],  f'interphase_prediction_{fish_color}_{current_git_commit}.csv'), index=False)
+    
+                                                  
     # df = pd.DataFrame(img_dict).reset_index()
     # df.to_csv(os.path.join(path_split[0],  'interphase_prediction.csv'), index=False)
 
