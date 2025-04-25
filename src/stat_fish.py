@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
 import yaml, glob, os, sys, datetime, shutil
+from pathlib import Path
+config = open("config.yaml")
+stat_fish_params_file = open("src/stat_fish_params.yaml")
+var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
+stat_fish_params = yaml.load(stat_fish_params_file, Loader=yaml.FullLoader)
+Path("README.md").touch()
+
 import pandas as pd
 import numpy as np
 from utils import *
@@ -8,9 +15,9 @@ from image_tools import *
 import seaborn as sns
 from skimage import *
 import scipy.stats
-from pathlib import Path
 import cv2
 from tqdm import tqdm
+import subprocess as sp
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -134,13 +141,7 @@ def count_blobs(fish_splice, cell_seg, min_cc_size):
             blob_count -= 1
     return blob_count
 
-def main(argv):
-    config = open("config.yaml")
-    stat_fish_params_file = open("src/stat_fish_params.yaml")
-    var = yaml.load(config, Loader=yaml.FullLoader)['stat_fish']
-    stat_fish_params = yaml.load(stat_fish_params_file, Loader=yaml.FullLoader)
-    Path("README.md").touch()
-    
+def main(argv):    
     inpath = var['inpath']
     
     # Intensity and Normal Distribution Scaled Thresholds

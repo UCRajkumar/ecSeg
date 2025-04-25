@@ -1,6 +1,6 @@
 interseg:
   inpath: /home/giprasad/test_dataset_3_channel/batches/batch_0
-  FISH_color: red
+  FISH_color: green
   has_centromeric_probe: True
 meta_overlay:
   inpath: ../images

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 import yaml, glob, os, sys, pickle
+from pathlib import Path
+config = open("config.yaml")
+var = yaml.load(config, Loader=yaml.FullLoader)['interseg']
+Path("README.md").touch()
+
 import subprocess as sp
 import pandas as pd
 import numpy as np
@@ -9,7 +14,6 @@ from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 from scipy import ndimage as ndi
 from skimage import *
-from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 import tensorflow.python.util.deprecation as deprecation
@@ -42,10 +46,6 @@ def im2patches_overlap(img, overlap = 75, scw = 256):
     return patches
 
 def main(argv):
-
-    config = open("config.yaml")
-    var = yaml.load(config, Loader=yaml.FullLoader)['interseg']
-    Path("README.md").touch()
     inpath = var['inpath']
     fish_color = var['FISH_color'].lower()
     has_centromeric_probe = var['has_centromeric_probe']
@@ -143,8 +143,8 @@ def main(argv):
             h = bb[2] - bb[0]; w = bb[3] - bb[1]
             if((h <= 256) & (w <= 256)):
                 nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w))]
-                p = resize(nuclei, (256, 256), preserve_range=True)
-                ecseg_i_prediction = ecseg_i_model.predict(np.expand_dims(p[...,0], 0))
+                p = np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0)
+                ecseg_i_prediction = ecseg_i_model.predict(p[...,0])
                 
                 pred_no_amp_, pred_ec_, pred_hsr_  = ecseg_i_prediction[0]
                 pred_no_amp.append(pred_no_amp_)
@@ -155,14 +155,14 @@ def main(argv):
                 ecseg_i_label.append(ecseg_i_label_)
                 
                 if has_centromeric_probe:
-                    p = tf.convert_to_tensor(np.expand_dims(ecseg_c_preprocess(p.astype('uint8')), 0), dtype=tf.float32)
-                    ecseg_c_prediction = tf.nn.softmax(list(ecseg_c_model(**{'input.1': p}).values())[0])
+                    p = tf.cast(p, tf.float32) / 255
+                    ecseg_c_prediction = ecseg_c_model.predict(p)
                 
-                    pred_no_focal_amp_, pred_focal_amp_ = ecseg_c_prediction[0]
+                    pred_no_focal_amp_, pred_focal_amp_ = 1-ecseg_c_prediction[0,0],ecseg_c_prediction[0,0]
                     pred_no_focal_amp.append(pred_no_focal_amp_)
                     pred_focal_amp.append(pred_focal_amp_)
 
-                    ecseg_c_label_ = ecseg_c_label_map[np.argmax(ecseg_c_prediction[0])]
+                    ecseg_c_label_ = ecseg_c_label_map[int(ecseg_c_prediction[0,0] > 0.5)]
                     ecseg_c_label.append(ecseg_c_label_)
 
                     interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
@@ -210,7 +210,7 @@ def main(argv):
                         pred_no_focal_amp.append(pred_no_focal_amp_)
                         pred_focal_amp.append(pred_focal_amp_)
 
-                        ecseg_c_label_ = ecseg_c_label_map[np.argmax(ecseg_c_prediction[0])]
+                        ecseg_c_label_ = ecseg_c_label_map[int(ecseg_c_prediction[0,0] > 0.5)]
                         ecseg_c_label.append(ecseg_c_label_)
 
                         interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
@@ -218,7 +218,7 @@ def main(argv):
                         if has_centromeric_probe and p[...,1].max() <= 10:
                             ecseg_c_label.append('No_Prediction (Low_CENT_Brightness)')
                             pred_no_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
-                            pred_focal_amp.append('No_Prediction (Low_CENT_Brightness)'
+                            pred_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
                         interseg_label.append(ecseg_i_label_)
 
         
