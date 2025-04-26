@@ -95,7 +95,7 @@ def main(argv):
     ecseg_i_model = load_model(ECSEG_I_MODEL)
     if has_centromeric_probe:
         ecseg_c_model = load_model(ECSEG_C_MODEL)
-
+        
     img_dict = {}
     dfs = []
     for i in image_paths:
@@ -143,7 +143,7 @@ def main(argv):
             h = bb[2] - bb[0]; w = bb[3] - bb[1]
             if((h <= 256) & (w <= 256)):
                 nuclei = temp[bb[0]:(bb[0] + min(256, h)), bb[1]:(bb[1]+ min(256, w))]
-                p = np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0)
+                p = np.expand_dims(resize(nuclei, (256, 256), preserve_range=True), 0).astype('uint8')
                 ecseg_i_prediction = ecseg_i_model.predict(p[...,0])
                 
                 pred_no_amp_, pred_ec_, pred_hsr_  = ecseg_i_prediction[0]
