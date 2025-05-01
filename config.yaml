@@ -1,6 +1,6 @@
 interseg:
   inpath: ../images
-  FISH_color: green
+  FISH_color: red
   has_centromeric_probe: True
 meta_overlay:
   inpath: ../images

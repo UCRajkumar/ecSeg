@@ -158,3 +158,13 @@ def nuclei_segment(image, resize_scale, sess1, sess2, pred_masks, train_initial,
     I8 = I8.astype('uint8')
     return I8
 
+
+def preprocess_ecseg_c(batch_x):
+    # batch_x is a single image
+    batch_x = tf.cast(batch_x, tf.float32)
+    dapi_norm = tf.expand_dims(tf.math.reduce_max(batch_x[...,2], axis=(0,1)), axis=0)
+    fish_norm = tf.math.reduce_max(batch_x[...,:2], axis=(0,1))
+    norm = tf.expand_dims(tf.expand_dims(tf.concat([fish_norm, dapi_norm], axis=0), axis=0), axis=0)
+    batch_x = tf.math.round((batch_x / norm) * 255) / 255
+    return batch_x
+

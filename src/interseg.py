@@ -155,7 +155,7 @@ def main(argv):
                 ecseg_i_label.append(ecseg_i_label_)
                 
                 if has_centromeric_probe:
-                    p = tf.cast(p, tf.float32) / 255
+                    p = np.expand_dims(preprocess_ecseg_c(p[0]), 0)
                     ecseg_c_prediction = ecseg_c_model.predict(p)
                 
                     pred_no_focal_amp_, pred_focal_amp_ = 1-ecseg_c_prediction[0,0],ecseg_c_prediction[0,0]
