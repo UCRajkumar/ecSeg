@@ -96,12 +96,19 @@ def main(argv):
     if has_centromeric_probe:
         ecseg_c_model = load_model(ECSEG_C_MODEL)
         
+        
+    stat_fish_results = pd.read_csv(os.path.join(inpath, 'annotated/stat_fish_lsq.csv'))
+                                    
     img_dict = {}
     dfs = []
     for i in image_paths:
         path_split = os.path.split(i)
         print("Processing image: ", i)
         
+        stat_fish_results_img = stat_fish_results[stat_fish_results['image_name'] == path_split[1][:-4]]
+        centromeric_quality_score = kurtosis(stat_fish_results_img[f"Avg fish intensity ({['red', 'green'][1-fish_index]})"])
+        centromeric_quality_score_pass = centromeric_quality_score <= 3
+
         I = u16_to_u8(imread(i))
         seg_cells_path = os.path.join(path_split[0], 'annotated', path_split[1][:-4], f"{path_split[1][:-4]}_segmentation.tif")
         segmented_cells = io.imread(seg_cells_path)
@@ -154,7 +161,7 @@ def main(argv):
                 ecseg_i_label_ = ecseg_i_label_map[np.argmax(ecseg_i_prediction[0])]
                 ecseg_i_label.append(ecseg_i_label_)
                 
-                if has_centromeric_probe:
+                if has_centromeric_probe and p[...,1].max() > 10 and centromeric_quality_score_pass:
                     p = np.expand_dims(preprocess_ecseg_c(p[0]), 0)
                     ecseg_c_prediction = ecseg_c_model.predict(p)
                 
@@ -167,6 +174,14 @@ def main(argv):
 
                     interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
                 else:
+                    if has_centromeric_probe and not centromeric_quality_score_pass:
+                        ecseg_c_label.append('No_Prediction (Failed Centromeric Quality Score)')
+                        pred_no_focal_amp.append('No_Prediction (Failed Centromeric Quality Score)')
+                        pred_focal_amp.append('No_Prediction (Failed Centromeric Quality Score)')
+                    elif has_centromeric_probe and p[...,1].max() <= 10:
+                        ecseg_c_label.append('No_Prediction (Low_CENT_Brightness)')
+                        pred_no_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
+                        pred_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
                     interseg_label.append(ecseg_i_label_)
 
                 centroids.append(str(int(center[0])) + '_' + str(int(center[1])))
@@ -202,8 +217,8 @@ def main(argv):
                     ecseg_i_label_ = ecseg_i_label_map[np.argmax(ecseg_i_prediction[0])]
                     ecseg_i_label.append(ecseg_i_label_)
 
-                    if has_centromeric_probe and p[...,1].max() > 10:
-                        p = tf.cast(p, tf.float32) / 255
+                    if has_centromeric_probe and p[...,1].max() > 10 and centromeric_quality_score_pass:
+                        p = np.expand_dims(preprocess_ecseg_c(p[0]), 0)
                         ecseg_c_prediction = ecseg_c_model.predict(p)
                         
                         pred_no_focal_amp_, pred_focal_amp_ = 1-ecseg_c_prediction[0,0],ecseg_c_prediction[0,0]
@@ -215,7 +230,11 @@ def main(argv):
 
                         interseg_label.append(interseg_label_map[(ecseg_c_label_, ecseg_i_label_)])
                     else:
-                        if has_centromeric_probe and p[...,1].max() <= 10:
+                        if has_centromeric_probe and not centromeric_quality_score_pass:
+                            ecseg_c_label.append('No_Prediction (Failed Centromeric Quality Score)')
+                            pred_no_focal_amp.append('No_Prediction (Failed Centromeric Quality Score)')
+                            pred_focal_amp.append('No_Prediction (Failed Centromeric Quality Score)')
+                        elif has_centromeric_probe and p[...,1].max() <= 10:
                             ecseg_c_label.append('No_Prediction (Low_CENT_Brightness)')
                             pred_no_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
                             pred_focal_amp.append('No_Prediction (Low_CENT_Brightness)')
