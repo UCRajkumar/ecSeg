@@ -13,6 +13,7 @@ from image_tools import *
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
 from scipy import ndimage as ndi
+from scipy.stats import kurtosis
 from skimage import *
 import warnings
 warnings.filterwarnings('ignore')
@@ -106,7 +107,7 @@ def main(argv):
         print("Processing image: ", i)
         
         stat_fish_results_img = stat_fish_results[stat_fish_results['image_name'] == path_split[1][:-4]]
-        centromeric_quality_score = kurtosis(stat_fish_results_img[f"Avg fish intensity ({['red', 'green'][1-fish_index]})"])
+        centromeric_quality_score = kurtosis(stat_fish_results_img[f"Avg fish intensity ({['red', 'green'][1-fish_index]})"]) if len(stat_fish_results) else float('inf')
         centromeric_quality_score_pass = centromeric_quality_score <= 3
 
         I = u16_to_u8(imread(i))
@@ -262,4 +263,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
