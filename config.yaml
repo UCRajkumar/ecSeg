@@ -1,7 +1,7 @@
 interseg:
   inpath: ../images
-  FISH_color: red
-  has_centromeric_probe: True
+  FISH_color: green
+  has_centromeric_probe: False
 meta_overlay:
   inpath: ../images
   color_sensitivity: 85
@@ -11,7 +11,7 @@ stat_fish:
   inpath: ../images
   scale: 1
   use_min_cut: True
-  nuclei_size_T: 500
+  nuclei_size_T: 5000
 fish_distance_calculation:
   inpath: ../images
   centromere_probe_color: green

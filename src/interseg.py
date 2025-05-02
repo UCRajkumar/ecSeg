@@ -98,7 +98,7 @@ def main(argv):
         ecseg_c_model = load_model(ECSEG_C_MODEL)
         
         
-    stat_fish_results = pd.read_csv(os.path.join(inpath, 'annotated/stat_fish_lsq.csv'))
+    stat_fish_results = pd.read_csv(os.path.join(inpath, 'annotated/stat_fish_lsq.csv'), keep_default_na=False, na_values=['_'])
                                     
     img_dict = {}
     dfs = []
