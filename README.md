@@ -115,19 +115,10 @@ ecseg
 Set parameters in config.yaml under `stat_fish`:
 
 ````
-inpath : path to folder containing images
-
-normal_threshold: Local Brightness Threshold (Recommended value: 15)
-color_sensitivity: Sensitivity to FISH color. Value between 0 (most sensitive) and 255 (least sensitive)
-scale: average square root of ratio of nuclei size relative to target_median_nuclei_size (Recommended value: auto)
-  
-cell_size_threshold_coeff: Minimum (nuclei size / median nuclei size) to consider for min-cut refinement (Recommended value: 1.25)
-flow_limit: Min-cut algorithm threshold to seperate neighboring nuclei (Recommended value: 60)
-
-min_score : 0.95
-nms_threshold : Threshold to suppress oversegmentation. (Recommended value: 0.01)
-scale_ratio : Ratio of cell size to image size. (Recommended value: 0.4)
-nuclei_size_t : Size threshold for finding nuclei. 
+inpath: path to folder containing images
+scale: Average square root of ratio of nuclei size relative to target_median_nuclei_size (Recommended value: 1)
+use_min_cut: Whether to use the min_cut algorithm to perform instance segmentation to break up overlapping nuclei.
+nuclei_size_t: Size threshold for finding nuclei.
 
 Note: Nuclei smaller than nuclei_size_t will be considered erroneous signals. 
 Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
@@ -139,7 +130,7 @@ Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
     1. “image_name” - Name of image
     2. “nuclei_center” - Center of each nucleus
     3. “#_FISH_pixels (FISH_color)" - # of FISH pixels inside nucleus
-    4. “#_FISH_blobs (FISH_color)" - # of FISH connected components.
+    4. “#_FISH_foci (FISH_color)" - # of FISH connected components.
     5. “Avg fish intensity (FISH_color)" - Avg intensity of the corresponding FISH pixels inside nucleus
     6. “Max fish intensity (FISH_color)" - Max intensity of the corresponding FISH pixels inside nucleus
     7. “#_DAPI_pixels” - # of DAPI pixels, i.e. size of nucleus.
@@ -181,10 +172,12 @@ FISH_color : Fish probe of interest ('green' or 'red')
 
 #### Output
 
-1. **interphase_prediction.csv** - Each row represents a single nucleus. Column headers are as follows:
+1. **interphase_prediction_(FISH_color).csv** - Each row represents a single nucleus. Column headers are as follows:
     1. “image_name” - Name of image
     2. “nuclei_center” - Center of each nucleus
-    3. “Majority_label" - Prediction value (No-amp, EC-amp, HSR-amp)
+    3. “ecSeg-i_label" - Prediction value using target probe only (No-amp, EC-amp, HSR-amp)
+    4. “ecSeg-c_label" - Prediction value of focal-amplification/no-amplification using target and centromeric probe (No-amp, Focal-amp)
+    5. “interSeg_label" - Combined ecSeg-i and ecSeg-c prediction (No-amp, EC-amp, HSR-amp)
 
 ## Bibtex
 ```
