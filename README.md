@@ -168,6 +168,7 @@ Set parameters in config.yaml under `interseg`:
 ````
 inpath : path to folder containing images
 FISH_color : Fish probe of interest ('green' or 'red')
+has_centromeric_probe: Whether to input both the target and centromeric probes (ecSeg-i and ecSeg-c) or in target probe only mode (ecSeg-i).
 ````
 
 #### Output
