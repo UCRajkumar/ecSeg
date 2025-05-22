@@ -131,7 +131,7 @@ def main(argv):
             mask = (segmented_cells == region.label)
             temp = I * np.expand_dims(mask, -1)
             
-            if (np.sum(temp[...,0])/np.sum(mask) < 0.05):
+            if (np.sum(temp[...,0])/np.sum(mask) < 12.75):
                 interseg_label.append('No_Prediction (Low_TRGT_brightness)')
                 ecseg_i_label.append('No_Prediction (Low_TRGT_brightness)')
                 pred_no_amp.append('No_Prediction (Low_TRGT_brightness)')
