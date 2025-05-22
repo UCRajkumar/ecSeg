@@ -215,6 +215,7 @@ def main(argv):
             
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]
+            segmented_cells = segmented_cells[:I.shape[0],:I.shape[1]] # In case of small resizing errors during upscaling
 
             # color_sensitivity = get_sensitivity(I, segmented_cells, intensity_threshold_std_coeff)
             if var['use_min_cut']:

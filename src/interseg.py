@@ -255,7 +255,7 @@ def main(argv):
 
     current_git_commit = sp.run('git log -1 | head -1', shell=True, capture_output=True).stdout.decode().strip().split(' ')[-1]
     dfs = pd.concat(dfs)
-    dfs.to_csv(os.path.join(path_split[0],  f'interphase_prediction_{fish_color}_{current_git_commit}.csv'), index=False)
+    dfs.to_csv(os.path.join(path_split[0],  f'interphase_prediction_{fish_color}.csv'), index=False)
     
                                                   
     # df = pd.DataFrame(img_dict).reset_index()
