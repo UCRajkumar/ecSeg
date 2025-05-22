@@ -1,6 +1,6 @@
 interseg:
-  inpath: /home/giprasad/Downloads
-  FISH_color: red
+  inpath: ../images
+  FISH_color: green
   has_centromeric_probe: False
 meta_overlay:
   inpath: ../images
@@ -8,7 +8,7 @@ meta_overlay:
 metaseg:
   inpath: ../images
 stat_fish:
-  inpath: /home/giprasad/Downloads
+  inpath: ../images
   scale: 1
   use_min_cut: True
   nuclei_size_T: 5000
