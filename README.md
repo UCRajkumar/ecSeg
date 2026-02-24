@@ -192,7 +192,7 @@ has_centromeric_probe: Whether to input both the target and centromeric probes (
     year = {2019}
 }
 
-@article {Rajkumar2025.06.23.661188,
+@article {Rajkumar2025,
 	author = {Rajkumar, Utkrisht and Prasad, Gino and Curtis, Ellis J and Wong, Ivy Tsz-Lo and Yan, Xiaowei and Zhang, Shu and Br{\"u}ckner, Lotte and Turner, Kristen and Wiese, Julie and Wahl, Justin and Wu, Sihan and Theissen, Jessica and Fischer, Matthias and Chang, Howard Y. and Henssen, Anton G. and Mischel, Paul S. and Bafna, Vineet},
 	title = {Accurate Prediction of ecDNA in Interphase Cancer Cells using Deep Neural Networks},
 	elocation-id = {2025.06.23.661188},
