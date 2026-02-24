@@ -1,8 +1,10 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-This repository is the official version of ecSeg, a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following reference if using ecSeg in your work: 
+This repository is the official version of ecSeg, a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following references if using ecSeg of interSeg in your work: 
 
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
+
+Rajkumar, U. et al. *Accurate Prediction of ecDNA in Interphase Cancer Cells using Deep Neural Networks.* bioRxiv. (2025)
 
 ## Directory structure
 
@@ -188,5 +190,13 @@ has_centromeric_probe: Whether to input both the target and centromeric probes (
     title = {{EcSeg: Semantic Segmentation of Metaphase Images Containing Extrachromosomal DNA}},
     url = {https://github.com/ucrajkumar/ecseg},
     year = {2019}
+}
+
+@article {Rajkumar2025.06.23.661188,
+	author = {Rajkumar, Utkrisht and Prasad, Gino and Curtis, Ellis J and Wong, Ivy Tsz-Lo and Yan, Xiaowei and Zhang, Shu and Br{\"u}ckner, Lotte and Turner, Kristen and Wiese, Julie and Wahl, Justin and Wu, Sihan and Theissen, Jessica and Fischer, Matthias and Chang, Howard Y. and Henssen, Anton G. and Mischel, Paul S. and Bafna, Vineet},
+	title = {Accurate Prediction of ecDNA in Interphase Cancer Cells using Deep Neural Networks},
+	elocation-id = {2025.06.23.661188},
+	year = {2025},
+	doi = {10.1101/2025.06.23.661188},
 }
 ```
