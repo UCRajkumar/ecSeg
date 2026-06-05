@@ -18,6 +18,7 @@ import scipy.stats
 import cv2
 from tqdm import tqdm
 import subprocess as sp
+import skimage
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -203,12 +204,9 @@ def main(argv):
             annotated_path = os.path.join(inpath, output_folder, img_name)
             os.makedirs(annotated_path, exist_ok=True)
             
-            if i.endswith('.tif'):
-                I = u16_to_u8(cv2.imread(i))
-            elif i.endswith('.npy'):
-                I = u16_to_u8(np.load(i))
-            else:
-                raise AssertionError
+            I = skimage.io.imread(i)
+            I = skimage.util.img_as_ubyte(I)[...,::-1]
+
             blue = I[:,:,0]
 
             segmented_cells = np.ones_like(blue) * 255
