@@ -211,7 +211,7 @@ def main(argv):
                 raise AssertionError
             blue = I[:,:,0]
 
-            segmented_cells = nuclei_segment(blue, resize_scale, sess1, sess2, pred_masks, train_initial, pred_masks_watershed, nuclei_size_t)
+            segmented_cells = np.ones_like(blue) * 255
             
             imheight, imwidth = segmented_cells.shape
             I = I[:imheight,:imwidth,:]

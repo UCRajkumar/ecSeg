@@ -1,6 +1,6 @@
 # Peak Threshold Parameters
 normal_threshold: 15
-color_sensitivity: [70, 70]
+color_sensitivity: [30, 30]
 
 # Min Cut Segmentation Improvement Parameters
 cell_size_threshold_coeff: 1.25
