@@ -2,9 +2,10 @@
 
 This repository is the official version of ecSeg, a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following references if using ecSeg of interSeg in your work: 
 
+Prasad, G. et al. *Accurate prediction of ecDNA in interphase cancer cells using deep neural networks.* _Communications Biology_. (2026)
+
 Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA.* iScience. 21, 428-435. (2019)
 
-Rajkumar, U. et al. *Accurate Prediction of ecDNA in Interphase Cancer Cells using Deep Neural Networks.* bioRxiv. (2025)
 
 ## Directory structure
 
@@ -184,6 +185,24 @@ has_centromeric_probe: Whether to input both the target and centromeric probes (
 
 ## Bibtex
 ```
+
+@article {Prasad2026,
+  title     = "Accurate prediction of {ecDNA} in interphase cancer cells using
+               deep neural networks",
+  author    = "Prasad, Gino and Rajkumar, Utkrisht and Curtis, Ellis J and
+               Wong, Ivy Tsz-Lo and Yan, Xiaowei and Zhang, Shu and
+               Br{\"u}ckner, Lotte and Turner, Kristen and Wiese, Julie and
+               Wahl, Justin and Hemmati, Homa and Wu, Sihan and Theissen,
+               Jessica and Fischer, Matthias and Chang, Howard Y and Henssen,
+               Anton G and Mischel, Paul S and Bafna, Vineet",
+  journal   = "Commun. Biol.",
+  publisher = "Springer Science and Business Media LLC",
+  volume    =  9,
+  number    =  1,
+  month     =  apr,
+  year      =  2026,
+}
+
 @article{Rajkumar2019,
     author = {Rajkumar, Utkrisht and Turner, Kristen and Luebeck, Jens and Deshpande, Viraj and Chandraker, Manmohan and Mischel, Paul and Bafna, Vineet},
     journal = {iScience},
@@ -192,11 +211,4 @@ has_centromeric_probe: Whether to input both the target and centromeric probes (
     year = {2019}
 }
 
-@article {Rajkumar2025,
-	author = {Rajkumar, Utkrisht and Prasad, Gino and Curtis, Ellis J and Wong, Ivy Tsz-Lo and Yan, Xiaowei and Zhang, Shu and Br{\"u}ckner, Lotte and Turner, Kristen and Wiese, Julie and Wahl, Justin and Wu, Sihan and Theissen, Jessica and Fischer, Matthias and Chang, Howard Y. and Henssen, Anton G. and Mischel, Paul S. and Bafna, Vineet},
-	title = {Accurate Prediction of ecDNA in Interphase Cancer Cells using Deep Neural Networks},
-	elocation-id = {2025.06.23.661188},
-	year = {2025},
-	doi = {10.1101/2025.06.23.661188},
-}
 ```
