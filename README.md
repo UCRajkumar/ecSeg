@@ -1,6 +1,6 @@
 # ecSeg: Semantic Segmentation of Metaphase Images containing Extrachromosomal DNA
 
-This repository is the official version of ecSeg, a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following references if using ecSeg of interSeg in your work: 
+This repository is the official version of ecSeg, a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following references if using ecSeg or interSeg in your work: 
 
 Prasad, G. et al. *Accurate prediction of ecDNA in interphase cancer cells using deep neural networks.* _Communications Biology_. (2026)
 
@@ -143,13 +143,13 @@ Rec: cultured images, use nuclei_size_t=5000. For tissue, use nuclei_size_t=500.
 2. **annotated/img_name/img_name_original_with_segmentation.tif**
     1. Visualization of nuclei segmentation outline overlayed with original image.
 3. **annotated/img_name/img_name_segmentation.tif**
-    1. NuSet Binary Segmentation visualization.
+    1. NuSeT Binary Segmentation visualization.
 4. **annotated/img_name/img_name_segmentation_corrected_min_cut.tif**
-    1. NuSet Binary Segmentation after Min Cut algorithm refinement, where each color represents a distinct nuclei.
+    1. NuSeT Binary Segmentation after Min Cut algorithm refinement, where each color represents a distinct nuclei.
 
 
 ### `make interseg`
-Predicts the probability of each nucleus having no amplification, HSR amplification, and ecDNA amplification for the oncogene (i.e. FISH probe) of interest.
+Predicts the probability of each nucleus having no amplification, HSR amplification, and ecDNA amplification for the oncogene (i.e. FISH probe) of interest. **Always run `make stat_fish` prior to running interseg**, as the pipeline will not proceed without the NuSeT segmentations located in the stat-FISH output.
 
 Recommended folder structure:
 ```
