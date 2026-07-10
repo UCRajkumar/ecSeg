@@ -42,18 +42,18 @@ Always make sure the `ecseg` environment is activated before executing any tasks
 conda activate ecseg
 ```
 
-## interSeg Pipeline Quickstart
+## InterSeg Pipeline Quickstart
 
-First, update the `inpath` variables in config.yaml in both the interseg *and* stat_fish sections with the folder path containing the `.tif` images.
+First, update the `inpath` variables in `config.yaml` for both the interseg *and* stat_fish sections with the folder path containing the `.tif` images.
 
-Then run:
+Then run the following commands:
 
 ```
 make stat_fish
 make interseg
 ```
 
-The output will be located in the `annotated` folder and `interphase_prediction_{FISH_color}.csv` csv file with the predictions for each nucleus.
+The final output will be located in the `annotated/` folder and `interphase_prediction_{FISH_color}.csv` csv file containing the predictions for each nucleus.
 
 
 ## Input Image Specifications
