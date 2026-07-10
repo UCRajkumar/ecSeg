@@ -1,4 +1,4 @@
-# ecSeg: Extrachromosomal DNA Prediction in Interphase and Metaphase Images
+# interSeg + ecSeg: ecDNA Prediction in Interphase and Metaphase Images
 
 This repository is the official version of both interSeg and ecSeg tools. InterSeg is a tool used to predict ecDNA amplification in FISH images. EcSeg is a tool used to quantify ecDNA in DAPI-stained images. It also has an extension to analyze FISH probes. Please cite (Bibtex at the bottom) the following references if using ecSeg or interSeg in your work: 
 
