@@ -22,8 +22,10 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 | Folder | Description                        |
 | ------ | ---------------------------------- |
 | src    | Contains python scripts            |
-| models | Contains required models. Download models.zip from [here](https://drive.google.com/file/d/1HdmJNDZuGokIAOfm7TVUa5fURvXkGqfs/view?usp=drive_link) and unzip the folder inside the ecseg/ folder|
-| example | Example images to test ecSeg       |
+| interseg_models | Folder containing required interSeg model weights. Download the 'interseg_models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/t9vmmjg3zc/1) and unzip the folder inside the ecseg/ repository|
+| models | Folder containing required ecSeg model weights. Download the 'models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/m7n3zvg539/6) and unzip the folder inside the ecseg/ repository|
+| example_interSeg | Example image to test interSeg |
+| example_ecSeg | Example images to test ecSeg |
 
 ## Installation
 
@@ -41,6 +43,11 @@ Always make sure the `ecseg` environment is activated before executing any tasks
 ```
 conda activate ecseg
 ```
+
+***Download the model weights*** for both interSeg and ecSeg:
+- Download the `interseg_models.zip` file from [Mendeley Data link](https://data.mendeley.com/datasets/t9vmmjg3zc/1) and unzip the file inside the ecseg/ repository.
+- Download the `models.zip` file from [Mendeley Data link](https://data.mendeley.com/datasets/m7n3zvg539/6) and unzip the file inside the ecseg/ repository.
+
 
 ## InterSeg Pipeline Quickstart
 
@@ -69,7 +76,7 @@ Segment metaphase images stained with DAPI. Identified background, nuclei, chrom
 
 Set parameters in config.yaml under `metaseg`:
 
-`inpath : path to folder containing images (make sure path is incapsulated inside single quotes. e.g. `path\to\folder`)`
+`inpath : path to folder containing images (make sure path is encapsulated inside single quotes. e.g. `path\to\folder`)`
 
 #### Output
 
