@@ -1,6 +1,6 @@
 interseg:
   inpath: ./example_interSeg
-  FISH_color: green
+  FISH_color: red
   has_centromeric_probe: False
 stat_fish:
   inpath: ./example_interSeg
@@ -8,12 +8,12 @@ stat_fish:
   use_min_cut: True
   nuclei_size_T: 5000
 meta_overlay:
-  inpath: ../images
+  inpath: ./example_ecSeg
   color_sensitivity: 85
 metaseg:
-  inpath: ../images
+  inpath: ./example_ecSeg
 fish_distance_calculation:
-  inpath: ./example_interSeg
+  inpath: ../images
   centromere_probe_color: green
   fish_probe_color: red
   max_centromeric_spots: 3
