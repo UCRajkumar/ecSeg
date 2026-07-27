@@ -22,8 +22,8 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 | Folder | Description                        |
 | ------ | ---------------------------------- |
 | src    | Contains python scripts            |
-| interseg_models.zip | Contains required interSeg model weights. Download the 'interseg_models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/t9vmmjg3zc/1) and unzip the folder inside the ecseg/ repository|
-| models | Contains required ecSeg model weights. Download the 'models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/m7n3zvg539/6) and unzip the folder inside the ecseg/ repository|
+| interseg_models | Folder containing required interSeg model weights. Download the 'interseg_models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/t9vmmjg3zc/1) and unzip the folder inside the ecseg/ repository|
+| models | Folder containing required ecSeg model weights. Download the 'models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/m7n3zvg539/6) and unzip the folder inside the ecseg/ repository|
 | example_interSeg | Example image to test interSeg |
 | example_ecSeg | Example images to test ecSeg |
 
