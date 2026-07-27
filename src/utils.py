@@ -26,7 +26,11 @@ deprecation._PRINT_DEPRECATION_WARNINGS = False
 
 def load_model(model_name):
     import tensorflow as tf
-    return tf.keras.models.load_model(os.path.join('models', model_name))
+    if model_name in ['interseg', 'ecseg_c']:
+        model_folder = 'interseg_models'
+    else:
+        model_folder = 'models'
+    return tf.keras.models.load_model(os.path.join(model_folder, model_name))
 
 def load_nuset(bbox_min_score, nms_thresh, resize_scale):
     pred_dict_final = {}

@@ -3,7 +3,10 @@ src/__pycache__
 src/nuset_utils/__pycache__
 src/model_layers/__pycache__
 models/
+interseg_models/
+*.zip
 .DS_*
 .ipynb_checkpoints
 Untitled.ipynb
 *.ipynb
+__MACOSX/
