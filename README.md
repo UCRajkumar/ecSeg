@@ -24,7 +24,7 @@ Rajkumar, U. et al. *ecSeg: Semantic Segmentation of Metaphase Images containing
 | src    | Contains python scripts            |
 | interseg_models | Folder containing required interSeg model weights. Download the 'interseg_models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/t9vmmjg3zc/1) and unzip the folder inside the ecseg/ repository|
 | models | Folder containing required ecSeg model weights. Download the 'models.zip' file from [Mendeley Data link](https://data.mendeley.com/datasets/m7n3zvg539/6) and unzip the folder inside the ecseg/ repository|
-| example_interSeg | Example image to test interSeg |
+| example_interSeg | Example images to test interSeg |
 | example_ecSeg | Example images to test ecSeg |
 
 ## Installation
@@ -51,7 +51,8 @@ conda activate ecseg
 
 ## InterSeg Pipeline Quickstart
 
-First, update the `inpath` variables in `config.yaml` for both the interseg *and* stat_fish sections with the folder path containing the `.tif` images.
+First, update the `inpath` variables in `config.yaml` for both the interseg *and* stat_fish sections with the folder path containing the `.tif` images. 
+Example images for interSeg are located in the `./example_interSeg` folder.
 
 Then run the following commands:
 
