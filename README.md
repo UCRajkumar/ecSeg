@@ -52,7 +52,7 @@ conda activate ecseg
 ## InterSeg Pipeline Quickstart
 
 First, update the `inpath` variables in `config.yaml` for both the interseg *and* stat_fish sections with the folder path containing the `.tif` images. 
-Example images for interSeg are located in the `./example_interSeg` folder.
+Example tif images for interSeg are located in the `./example_interSeg` folder.
 
 Then run the following commands:
 
